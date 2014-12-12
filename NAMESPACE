@@ -1,0 +1,74 @@
+# 
+# Copyright (c) 2010, 2014, IBM Corp. All rights reserved. 
+# 		
+# This program is free software: you can redistribute it and/or modify 
+# it under the terms of the GNU General Public License as published by 
+# the Free Software Foundation, either version 3 of the License, or 
+# (at your option) any later version. 
+#
+# This program is distributed in the hope that it will be useful, 
+# but WITHOUT ANY WARRANTY; without even the implied warranty of 
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
+# GNU General Public License for more details. 
+#
+# You should have received a copy of the GNU General Public License 
+# along with this program. If not, see <http://www.gnu.org/licenses/>. 
+#
+
+import(RODBC)
+import(MASS)
+importFrom("graphics", "hist")
+importFrom("stats", "cov")
+importFrom("utils", "head", "tail")
+importFrom("methods", "show")
+
+exportMethods("cov", "hist", "print",
+# ida.data.frame
+	 "as.data.frame", "[", "<=", "<", ">=", ">", "!=", "==",
+	 "dim", "NROW", "NCOL", "length", "head",  "names",
+	"mean","min","max", "colnames", "sd", "var","cov", "cor", "summary","as.vector",
+	# ida.data.frame.rows
+	"|", "&", "$",ifelse,as.character,as.integer,as.numeric)	
+
+export(
+	# ida.data.frame
+	ida.data.frame, is.ida.data.frame,
+	idaCreateView, idaDropView,
+	as.ida.data.frame,
+	
+	# DB2 general
+	idaShowTables, idaDeleteTable, idaExistTable,
+	idaGetValidTableName, idaIsView,
+	
+	# initialization
+	idaInit,
+
+	# query
+	idaQuery, idaScalarQuery,
+	
+	#ida.list
+	ida.list,is.ida.list,
+	
+	#Mining methods
+	idaLm,
+
+	#Merge
+	idaMerge,
+	
+	#Statistics and info
+	idaTable,
+	#idaTableDef,
+	
+	#Column definitions
+	db.is.null,
+	
+	#Sampling
+	idaSample,
+	
+	#Original bluR functions
+	idaClose,
+	idaConnect,
+	idadf,
+	idaSave,
+	idaUpdate
+)
