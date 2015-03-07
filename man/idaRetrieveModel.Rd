@@ -15,29 +15,34 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>. 
 % 
 % 
-\name{idaShowTables}
-\alias{idaShowTables}
-\title{Return a list of tables}
+\name{idaRetrieveModel}
+\alias{idaRetrieveModel}
+\title{Retrieve a predictive model from the database}
 \description{
-  Returns a data frame that contains the names of the tables contained in the
-  current database.
+Use this function to retrieve from the database a model that was created using the \code{\link{idaNaiveBayes}} 
+or \code{\link{idaKMeans}} function.
 }
+
 \usage{
-idaShowTables(showAll=FALSE)
+idaRetrieveModel(modelname)
 }
 
 \arguments{
-  \item{showAll}{List all tables that are listed in the catalog of the current database (TRUE) or only those tables that are in the current schema (FALSE).}
+  \item{modelname}{The name of the predictive model to be retrieved.}
 }
 
 \value{
-  A data frame with the columns Schema, Name, Owner, and Type.
+This function returns an R object that contains a representation of the retrieved model.
+The class of the returned object depends on the function that was used to create the 
+model.
 }
+
+%\seealso{\code{\link{idaTree}}, \code{\link{idaKMeans}} }
+
 \examples{
 \dontrun{
 
-#Get a list of all tables in the current schema
-tabs <- idaShowTables()
-
+#Retrieve the model with name "MYKMEANSMODEL" from the database
+trCopy <- idaRetrieveModel("KMEANSMODEL");
 }
 }

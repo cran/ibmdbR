@@ -41,11 +41,16 @@ idaTable(idadf,max.entries=1000)
 }
 
 \examples{
-\donttest{
-systypes<-ida.data.frame('DB2INST1.SHOWCASE_SYSTYPES')
-systypes$unix <- ifelse(systypes$DESCRIPTION!='Windows','T','F')
+\dontrun{
 
-idaTable(systypes)
+#Create a pointer to the table IRIS
+idf<-ida.data.frame('IRIS')
+
+#Add a column
+idf$SepalLengthg4 <- ifelse(idf$SepalLength>4,'t','f')
+
+#Calculate the cross-table between Species and SepalLengthg4
+idaTable(idf[,c('Species','SepalLengthg4')])
 
 }
 }

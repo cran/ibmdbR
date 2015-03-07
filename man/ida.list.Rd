@@ -37,7 +37,9 @@
   you can only retrieve objects from it, not store objects in it.)
   
   Please note that whether public tables might not have effect on databases that do not allow to set
-  permissions accordingly, for instance, in multi-tenant environments.
+  permissions accordingly, for instance, in multi-tenant environments. To enable the sharing of objects,
+  an administrator needs to first create a role names R_USERS_PUBLIC and assign it to all users who
+  should be allowed to share objects.
   
 }
 
@@ -58,7 +60,7 @@ ida.list(type='public',user=NULL)
 }
 
 \examples{
-\donttest{
+\dontrun{
 # Create a pointer to the private R object storage table of the current user.
 myPrivateObjects <- ida.list(type='private')
 
@@ -84,14 +86,5 @@ length(myPrivateObjects)
 # Create a pointer to the public R object storage table of the current user.
 myPublicObjects <- ida.list(type="public")
 
-# Create a pointer to the public R object storage table of the user 'BOB'.
-BOBobj <- ida.list(user="BOB",type="public")
-
-# Use the pointer created in the previous example to retrieve the object with the ID 'tree2' from 
-# the public R object storage table of the user 'BOB'.
-x <- BOBobj['tree2']
-
-# List all objects in the public R object storage table of the user 'BOB'.
-names(BOBobj)
 }
 }

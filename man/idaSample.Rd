@@ -69,16 +69,14 @@ dbPreSamplePercentage=100,fetchFirst=F);
 }
 
 \examples{
-\donttest{
-bdf<-ida.data.frame('DB2INST1.SHOWCASE_SYSUSAGE')
+\dontrun{
+idf<-ida.data.frame('IRIS')
 
 #Simple random sampling
-df <- idaSample(bdf,10)
+df <- idaSample(idf,10)
 
 #Stratified sample
-df <- idaSample(bdf,10,'ALERT')
+df <- idaSample(idf,10,'Species')
 
-#Stratified sample with some specified values and probabilities
-df <- idaSample(bdf,10,'SID',c(1,2),c(0.1,0.9))
 }
 }

@@ -17,10 +17,17 @@
 
 import(RODBC)
 import(MASS)
+#import(arules)
+#import(Matrix)
 importFrom("graphics", "hist")
 importFrom("stats", "cov")
 importFrom("utils", "head", "tail")
 importFrom("methods", "show")
+
+S3method(predict, idaKMeans)
+S3method(predict, idaNaiveBayes)
+S3method(print, idaKMeans)
+S3method(print, idaNaiveBayes)
 
 exportMethods("cov", "hist", "print",
 # ida.data.frame
@@ -51,7 +58,22 @@ export(
 	
 	#Mining methods
 	idaLm,
-
+	idaKMeans,
+	print.idaKMeans,
+	predict.idaKMeans,
+	idaNaiveBayes,
+	predict.idaNaiveBayes,
+	print.idaNaiveBayes,
+ # 	idaArule,
+  #	idaApplyRules,
+  
+	#Model management
+	idaRetrieveModel,
+	idaListModels,
+	idaDropModel,
+	idaModelExists,
+#	idaGetModelname,
+	
 	#Merge
 	idaMerge,
 	
@@ -61,7 +83,7 @@ export(
 	
 	#Column definitions
 	db.is.null,
-	
+		
 	#Sampling
 	idaSample,
 	

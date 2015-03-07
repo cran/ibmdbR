@@ -154,6 +154,10 @@ idaQuery <- function (..., as.is = TRUE)  {
   
   query <- paste(..., sep = "", collapse = "")
   
+  if(exists("p_debug",envir=idaRGlobal)&&(get("p_debug",envir=idaRGlobal))) { 
+    print(query)
+  }
+  
   result <- sqlQuery(get("p_idaConnection",envir=idaRGlobal), query, believeNRows = FALSE, 
       stringsAsFactors = FALSE, as.is = as.is)
   

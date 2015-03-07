@@ -102,15 +102,13 @@ However, it is persistent and, after it is no longer needed, it must be dropped 
 \seealso{\code{\link{ida.data.frame}}
 }
 \examples{
-\donttest{
-#Create pointers to the input tables
-sysusage<-ida.data.frame('DB2INST1.SHOWCASE_SYSUSAGE')
-systems<-ida.data.frame('DB2INST1.SHOWCASE_SYSTEMS')
-systypes<-ida.data.frame('DB2INST1.SHOWCASE_SYSTYPES')
+\dontrun{
 
-# Merge (join) the three tables on their TYPEID and system ID (SID) columns.
-mergedSys<-idaMerge(systems, systypes, by='TYPEID')
-mergedUsage<-idaMerge(sysusage, mergedSys, by='SID')
+idf <- ida.data.frame('IRIS')
+
+#Perform a self-join
+idf2 <- idaMerge(idf,idf,by="ID")
+
 }
 
 }

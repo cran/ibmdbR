@@ -29,9 +29,11 @@ ida.list <- function (type='public',user=NULL) {
   #Check if the tables are there already if no other user is given
   if((is.null(user))||(currentUser==user)) {
     if(type=='public') {
+      
       tableName <- paste('"',currentUser,'".',publicTablePrefix,sep='')
       tableNameMeta <- paste('"',currentUser,'".',publicTablePrefix,"_META",sep='')
       if(!idaExistTable(tableName)) {
+      	checkRole()
         createIdaListTable(tableName,'public')
       }
       if(!idaExistTable(tableNameMeta)) {
@@ -70,18 +72,29 @@ ida.list <- function (type='public',user=NULL) {
 
 ################ Internal utilities ############################
 createIdaListTable <- function(tableName,type) {
+
   idaQuery("CREATE TABLE ", tableName, " (OBJID VARCHAR(2000), SID INTEGER, SNIPPET VARCHAR(30000))");
   if(type=='public') {
-    idaQuery("GRANT SELECT ON ",tableName," TO ALL");
+    idaQuery("GRANT SELECT ON ",tableName," TO R_USERS_PUBLIC");
   }
 }
 
 createIdaListMetaTable <- function(tableName,type) {
   idaQuery("CREATE TABLE ", tableName, " (OBJID VARCHAR(2000),SIZE BIGINT, DATE_CREATION VARCHAR(100),CATEGORY VARCHAR(1000))");
   if(type=='public') {
-    idaQuery("GRANT SELECT ON ",tableName," TO ALL");
+    idaQuery("GRANT SELECT ON ",tableName," TO R_USERS_PUBLIC");
   }
 }
+
+checkRole <- function() {
+  if(!idaCheckRole("R_USERS_PUBLIC")) {
+    stop("To enable sharing of R objects a role with name R_USERS_PUBLIC needs to be created first.")
+    return(F)
+  } else {
+    return(T)
+  }
+}
+
 
 ################ Methods ############################
 setMethod("[", signature(x = "ida.list"),

@@ -46,17 +46,17 @@ and the result is passed to the database.
 }
 
 \examples{
-\donttest{
+\dontrun{
 #idaScalarQuery returns a single value
-v <- idaScalarQuery("SELECT COUNT(*) FROM DB2INST1.SHOWCASE_SYSTEMS")
+v <- idaScalarQuery("SELECT COUNT(*) FROM IRIS")
 
 #idaQuery returns a data.frame
-df <- idaScalarQuery("SELECT * FROM DB2INST1.SHOWCASE_SYSTEMS")
+df <- idaScalarQuery("SELECT * FROM IRIS")
 
 #idaQuery and idaScalarQuery automatically paste all arguments into a single query
 #This is convenient if you use variables
 
-tableName <- "DB2INST1.SHOWCASE_SYSTEMS"
+tableName <- "IRIS"
 df <- idaQuery("SELECT COUNT(*) FROM ",tableName)
 }
 }

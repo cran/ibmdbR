@@ -44,6 +44,16 @@ idaInit <- function(con,jobDescription=NULL) {
     
   #Set the current connection parameters for job monitoring
   try({idaQuery(paste("CALL WLM_SET_CLIENT_INFO(NULL,NULL,'ibmdbR','",script,"',NULL)",sep=''))},silent=T)
+   
+  #Check what functions are available in the database
+  #c1 <- idaCheckProcedure("KMEANS","idaKMeans",T)
+  #c2 <- idaCheckProcedure("NAIVEBAYES","idaNaiveBayes",T)
+  #c3 <- T
+  #  c3 <- idaCheckProcedure("ASSOCRULES","idaArule",T) 
+  
+  #if(!(c1&&c2&&c3)) {
+  #  message("Note that not all backend databases provide push-down capabilities for all analytical functions.")
+  #}
   
 }
 
@@ -53,4 +63,20 @@ idaCheckConnection <- function () {
     stop("The connection is not set, please use idaAnalyticsInit(con), where con is an open connection.", call.=FALSE)
 }
 
+idaCheckProcedure <- function(procName, algName, verbose=F) {
+  
+  catQuery <- paste("SELECT COUNT(*) FROM SYSCAT.ROUTINES WHERE ROUTINENAME = '",procName,"' AND ROUTINEMODULENAME = 'IDAX'",sep='') 
+  available <- idaScalarQuery(catQuery)>0;
+  
+  if(verbose&&!available) {
+    message(paste("Function ",algName, " ",ifelse(available,"","not "),"available for this connection.",sep=''))
+  } 
+  
+  invisible(available)
+}
 
+idaCheckRole <- function(roleName) {
+  catQuery <- paste("SELECT COUNT(*) FROM SYSCAT.ROLES WHERE ROLENAME = '",roleName,"'",sep='') 
+  available <- idaScalarQuery(catQuery)>0;
+  return(available)
+}

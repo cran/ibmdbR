@@ -1,5 +1,5 @@
 % 
-% Copyright (c) 2010, 2014, IBM Corp. All rights reserved. 
+% Copyright (c) 2010, 2015, IBM Corp. All rights reserved. 
 % 		
 % This program is free software: you can redistribute it and/or modify 
 % it under the terms of the GNU General Public License as published by 
@@ -41,11 +41,11 @@ idaDropView(v)
 }
 
 \examples{
-\donttest{
-bdf <- ida.data.frame('DB2INST1.SHOWCASE_SYSTEMS')
+\dontrun{
+idf <- ida.data.frame('IRIS')
 
 #Create a view based on the IDA data frame
-vname <- idaCreateView(bdf)
+vname <- idaCreateView(idf)
 
 #Drop the view
 idaDropView(vname)

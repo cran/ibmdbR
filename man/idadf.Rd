@@ -62,11 +62,14 @@ and \code{\link{as.ida.data.frame}} instead of these methods.
 \seealso{\code{\link{idaQuery}},\code{\link{ida.data.frame}},\code{\link{as.ida.data.frame}},\code{\link[RODBC]{sqlQuery}},\code{\link[RODBC]{sqlSave}},\code{\link[RODBC]{sqlUpdate}}}
 
 \examples{
-\donttest{
+\dontrun{
 # create connection to DB
-con <- idaConnect("IDADB", "", "")
+con <- idaConnect("BLUDB", "", "")
 
 # create data.frame from table
-df <- idadf(con, "SELECT * FROM DB2INST1.SHOWCASE_SYSTEMS")
+df <- idadf(con, "SELECT * FROM IRIS")
+
+# close the connection again
+idaClose(con)
 }
 }

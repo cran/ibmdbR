@@ -89,23 +89,21 @@ will refuse a query that was not properly defined.
 }
 
 \examples{
-\donttest{
-systemsBdf <- ida.data.frame('DB2INST1.SHOWCASE_SYSTEMS')
-is.ida.data.frame(systemsBdf)
+\dontrun{
+idf <- ida.data.frame('IRIS')
+is.ida.data.frame(idf)
 
 #Select only certain rows or columns
 #The following creates a ida.data.frame that only selects rows with
-#TYPEID='1' and the first three columns of a table
-systemsBdf2 <- systemsBdf[systemsBdf$TYPEID=='1',1:3]
-
-#Alternatively, column names can be specified
-systemsBdf2 <- systemsBdf[systemsBdf$TYPEID=='1',c('SID','DESCRIPTION')]
+#Species=='setosa' and the first three columns of the table
+idf2 <- idf[idf$Species=='setosa',1:3]
 
 #Define new columns based on existing ones
-systemsBdf$TYPEID2 <- systemsBdf$SID+10
-systemsBdf$TYPEID3 <- ifelse(systemsBdf$SID==1,systemsBdf$SID,10)
+idf$SepalLengthX <- idf$SepalLength+1
+idf$SepalLengthY <- ifelse(idf$SepalLengthX>4.5,idf$ID,10)
 
-head(systemsBdf)
+#Take a look at the newly defined columns
+head(idf)
 
  
 }

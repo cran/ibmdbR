@@ -21,7 +21,9 @@
 \alias{$,ida.list-method}
 \alias{$<-,ida.list-method}
 \alias{[,ida.list-method}
+\alias{[,ida.list,ANY,ANY,ANY-method}
 \alias{[<-,ida.list-method}
+\alias{[<-,ida.list,ANY,ANY,ANY-method}
 \alias{length,ida.list-method}
 \alias{names,ida.list-method}
 \alias{print,ida.list-method}

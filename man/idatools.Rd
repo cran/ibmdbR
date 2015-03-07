@@ -60,22 +60,23 @@ idaGetValidTableName(prefix="DATA_FRAME_")
 }
 
 \examples{
-\donttest{
+\dontrun{
+
 #Check whether a table with a given name exists
-idaExistTable('DB2INST1.SHOWCASE_SYSTEMS')
+idaExistTable('IRIS')
 
 #Create a pointer to the table
-bdf <- ida.data.frame('DB2INST1.SHOWCASE_SYSTEMS')
+idf <- ida.data.frame('IRIS')
 
-#Obtain a unique table name for the copy
+#Obtain a unique table name for a copy
 copyTableName <- idaGetValidTableName(prefix = "COPY_")
 
 #Create a copy of the original table
-bdfCopy <- 
-  as.ida.data.frame(as.data.frame(bdf),copyTableName,clear.existing=TRUE, case.sensitive=TRUE)
+idfCopy <- as.ida.data.frame(as.data.frame(idf),copyTableName)
 
-#Delete the copy
+#Delete the copy again
 idaDeleteTable(copyTableName)
+
 }
 }
 

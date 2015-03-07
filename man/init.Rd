@@ -40,9 +40,13 @@ idaInit(con,jobDescription=NULL)
 }
 
 \examples{
-\donttest{
+\dontrun{
+
 #Initialize the IDA Analytics functions
-con <- idaConnect("BLUDB","","")
+con <- idaConnect('BLUDB','','')
+
+#Initialize the in-database functionality
 idaInit(con)
+
 }
 }

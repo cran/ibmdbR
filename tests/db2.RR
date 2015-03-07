@@ -1,0 +1,128 @@
+library(ibmdbR)
+conx <- idaConnect("DASHDB","","")
+idaInit(conx)
+
+#Add an ID column to iris
+iris2 <- iris
+iris2$ID <- 1:150
+
+#Upload it and overwrite if already exists
+idf <- as.ida.data.frame(iris2,"IRIS",clear.existing=T)
+	
+
+#Add an ID column to iris
+iris2 <- iris
+iris2$ID <- 1:150
+
+#Upload it and overwrite if already exists
+idf <- as.ida.data.frame(iris2,"IRIS",clear.existing=T)
+		
+idf <- ida.data.frame('IRIS')
+
+#Create a view based on the IDA data frame
+vname <- idaCreateView(idf)
+
+#Drop the view
+idaDropView(vname)
+idf <- ida.data.frame('IRIS')
+is.ida.data.frame(idf)
+
+#Select only certain rows or columns
+#The following creates a ida.data.frame that only selects rows with
+#Species=='setosa' and the first three columns of the table
+idf2 <- idf[idf$Species=='setosa',1:3]
+
+#Define new columns based on existing ones
+idf$SepalLengthX <- idf$SepalLength+1
+idf$SepalLengthY <- ifelse(idf$SepalLengthX>4.5,idf$ID,10)
+
+#Take a look at the newly defined columns
+head(idf)
+
+ 
+# Create a pointer to the private R object storage table of the current user.
+myPrivateObjects <- ida.list(type='private')
+
+# Use the pointer created in the previous example to store a series of numbers in an object with 
+# the name 'series100' in the private R object storage table of the current user.
+myPrivateObjects['series100'] <- 1:100
+
+# Retrieve the object with the name 'series100' from the 
+# private R object storage table of the current user.
+x <- myPrivateObjects['series100']
+
+# Delete the object with name 'series100' from the 
+# private R object storage table of the current user.
+
+myPrivateObjects['series100'] <- NULL
+
+# List all objects in the private R object storage table of the current user.
+names(myPrivateObjects)
+
+# Return the number of objects in the private R object storage table of the current user.
+length(myPrivateObjects)
+
+#Create a pointer to table IRIS
+idf<-ida.data.frame('IRIS')
+
+#Calculate linear model in-db
+lm1 <- idaLm(SepalLength~SepalWidth, idf)
+
+idf <- ida.data.frame('IRIS')
+
+#Perform a self-join
+idf2 <- idaMerge(idf,idf,by="ID")
+
+#Create ida data frame
+idf <- ida.data.frame("IRIS")
+
+#idaScalarQuery returns a single value
+v <- idaScalarQuery("SELECT COUNT(*) FROM IRIS")
+
+#idaQuery returns a data.frame
+df <- idaScalarQuery("SELECT * FROM IRIS")
+
+#idaQuery and idaScalarQuery automatically paste all arguments into a single query
+#This is convenient if you use variables
+
+tableName <- "IRIS"
+df <- idaQuery("SELECT COUNT(*) FROM ",tableName)
+idf<-ida.data.frame('IRIS')
+
+#Simple random sampling
+df <- idaSample(idf,10)
+
+#Stratified sample
+df <- idaSample(idf,10,'Species')
+
+
+#Create a pointer to the table IRIS
+idf<-ida.data.frame('IRIS')
+
+#Add a column
+idf$SepalLengthg4 <- ifelse(idf$SepalLength>4,'t','f')
+
+#Calculate the cross-table between Species and SepalLengthg4
+idaTable(idf[,c('Species','SepalLengthg4')])
+
+
+#Check whether a table with a given name exists
+idaExistTable('IRIS')
+
+#Create a pointer to the table
+idf <- ida.data.frame('IRIS')
+
+#Obtain a unique table name for a copy
+copyTableName <- idaGetValidTableName(prefix = "COPY_")
+
+#Create a copy of the original table
+idfCopy <- as.ida.data.frame(as.data.frame(idf),copyTableName)
+
+#Delete the copy again
+idaDeleteTable(copyTableName)
+
+
+#Get a list of all tables in the current schema
+tabs <- idaShowTables()
+
+idaClose(conx)

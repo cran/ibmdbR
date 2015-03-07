@@ -1,17 +1,17 @@
 Package: ibmdbR
-Version: 1.34.3
-Title: IBM In-Database Analytics for R
+Version: 1.36.7
+Title: IBM in-Database Analytics for R
 Author: IBM Corporation
 Maintainer: Michael Wurst <inza@de.ibm.com>
 Depends: R (>= 2.15.1), methods, RODBC, MASS
 Description: Functionality required to efficiently use R with
-        IBM DB2(c) for Linux, Unix and Windows as well as IBM dashDB(c).
+        IBM DB2(C) for Linux, Unix and Windows as well as IBM dashDB(C).
         Many basic and complex R operations are pushed down into the database, which removes
-        the main memory boundary of R and allows to take advantage of parallel processing in
+        the main memory boundary of R and allows to make full use of parallel processing in
         the underlying database. 
 License: GPL-3
 LazyLoad: Yes
-Packaged: 2014-12-12 13:10:02 UTC; mwurst
+Packaged: 2015-03-07 22:27:23 UTC; mwurst
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2014-12-12 14:54:03
+Date/Publication: 2015-03-08 07:18:11

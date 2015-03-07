@@ -44,9 +44,9 @@ change, however, in the future.
 }
 
 \examples{
-\donttest{
+\dontrun{
 #Connect locally 
-con <- idaConnect('IDADB','','')
+con <- idaConnect('BLUDB','','')
 
 #Close the connection
 idaClose(con)

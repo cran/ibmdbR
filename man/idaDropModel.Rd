@@ -1,5 +1,5 @@
 % 
-% Copyright (c) 2010, 2015, IBM Corp. All rights reserved. 
+% Copyright (c) 2010, 2014, IBM Corp. All rights reserved. 
 % 		
 % This program is free software: you can redistribute it and/or modify 
 % it under the terms of the GNU General Public License as published by 
@@ -15,23 +15,28 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>. 
 % 
 % 
-\name{ida.col.def methods}
-\docType{methods}
-\alias{!,ida.col.def-method}
-\alias{as.character,ida.col.def-method}
-\alias{as.integer,ida.col.def-method}
-\alias{as.numeric,ida.col.def-method}
-\alias{as.vector,ida.col.def-method}
-\alias{as.vector,ida.col.def,ANY-method}
-\alias{ifelse,ida.col.def-method}
-\alias{print,ida.col.def-method}
-\alias{db.is.null}
-
-\title{Available methods for ida.col.def}
+\name{idaDropModel}
+\alias{idaDropModel}
+\title{Drop a predictive model from the database}
 \description{
-\code{ida.col.def} objects are used to define new columns of a \code{ida.data.frame} based
-on existing ones.
+Use this function to drop from the database a model that was created using the \code{\link{idaNaiveBayes}} 
+or \code{\link{idaKMeans}} function.
+}
 
-For details see the documentation of \code{\link{ida.data.frame}}.
+\usage{
+idaDropModel(modelname)
+}
 
+\arguments{
+  \item{modelname}{The name of the predictive model to be dropped.}
+}
+
+%\seealso{\code{\link{idaTree}}, \code{\link{idaKMeans}} }
+
+\examples{
+\dontrun{
+
+#Drop the model with the name MYTREEMODEL
+idaDropModel("KMEANSMODEL");
+}
 }

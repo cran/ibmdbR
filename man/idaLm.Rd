@@ -76,11 +76,11 @@ $BIC is the Bayesian information criterion. This is used for model selection.
 }
 
 \examples{
-\donttest{
-#Create a pointer to table DB2INST1.SHOWCASE_SYSUSAGE
-sysusage<-ida.data.frame('DB2INST1.SHOWCASE_SYSUSAGE')
+\dontrun{
+#Create a pointer to table IRIS
+idf<-ida.data.frame('IRIS')
 
 #Calculate linear model in-db
-lm1 <- idaLm(MEMUSED~USERS, sysusage)
+lm1 <- idaLm(SepalLength~SepalWidth, idf)
 }
 }

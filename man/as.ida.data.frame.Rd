@@ -1,5 +1,5 @@
 % 
-% Copyright (c) 2010, 2014, IBM Corp. All rights reserved. 
+% Copyright (c) 2010, 2015, IBM Corp. All rights reserved. 
 % 		
 % This program is free software: you can redistribute it and/or modify 
 % it under the terms of the GNU General Public License as published by 
@@ -48,11 +48,14 @@ as.ida.data.frame(x,table=NULL,clear.existing=FALSE,case.sensitive=TRUE)
 \seealso{ \code{\link{as.data.frame}} }
 
 \examples{
-\donttest{
-# create data.frame from table in local memory
-df <- idaQuery("SELECT * FROM DB2INST1.SHOWCASE_SYSTEMS")
- 
-# convert data.frame to ida.data.frame, contents will be loaded into table 'SHOWCASE_SYSTEMS_COPY'
-idadf <- as.ida.data.frame(df,'SHOWCASE_SYSTEMS_COPY',clear.existing=TRUE)
+\dontrun{
+
+#Add an ID column to iris
+iris2 <- iris
+iris2$ID <- 1:150
+
+#Upload it and overwrite if already exists
+idf <- as.ida.data.frame(iris2,"IRIS",clear.existing=T)
+	
 }
 }

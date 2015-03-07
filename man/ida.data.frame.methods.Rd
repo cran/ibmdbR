@@ -42,6 +42,7 @@
 \alias{cov,ANY,ida.data.frame-method}
 \alias{cov,ida.data.frame,ANY-method}
 \alias{cov,ida.data.frame,ida.data.frame-method}
+\alias{[,ida.data.frame,ANY,ANY,ANY-method}
 
 \title{Available methods for ida.data.frame}
 \description{
