@@ -37,9 +37,9 @@
   you can only retrieve objects from it, not store objects in it.)
   
   Please note that whether public tables might not have effect on databases that do not allow to set
-  permissions accordingly, for instance, in multi-tenant environments. To enable the sharing of objects,
+  permissions accordingly, for instance, in multi-tenant environments. To enable the sharing of objects in DB2,
   an administrator needs to first create a role names R_USERS_PUBLIC and assign it to all users who
-  should be allowed to share objects.
+  should be allowed to share objects. For dashDB, roles will be setup automatically if in the scope of the plan.
   
 }
 
@@ -50,7 +50,7 @@ ida.list(type='public',user=NULL)
 \arguments{
   \item{type}{The type (private or public) of the table. You can specify 'private' only if \code{user} is NULL  
   or is set explicitly to your own user ID.} 
-  \item{user}{The user ID of the owner of the R object storage table. If set to NULL, the user ID is that of the current user.}
+  \item{user}{The user ID of the owner of the R object storage table. If set to NULL, the user ID is that of the current user. The user ID is treated case-sensitive.}
 }
 
 % \details{}

@@ -32,6 +32,7 @@ idaSample <- function(bdf, n, stratCol=NULL,stratVals=NULL,stratProbs=NULL,dbPre
   if(!is.null(stratCol)) {
     
     stats <- idaQuery("SELECT \"",stratCol,"\" AS GRP,COUNT(*) AS CNT FROM ",idadf.from(bdf)," ",ifelse(nchar(bdf@where),paste(" WHERE ",bdf@where,sep=''),'')," GROUP BY \"",stratCol,"\"");
+    stats$CNT <- as.numeric(stats$CNT)
     
     if(!is.null(stratVals)) {
       stats$CNT <- ifelse(stats$GRP %in% stratVals,stats$CNT,0);
@@ -64,7 +65,7 @@ idaSample <- function(bdf, n, stratCol=NULL,stratVals=NULL,stratProbs=NULL,dbPre
       for(i in 1:nrow(stats)) {			
         stats$n[i] <- as.integer(ifelse(stats$GRP[i] %in% stratVals,ceiling(stratMap[[stats$GRP[i]]]*n),0));
       }
-      
+  
       for(i in 1:nrow(stats)) {
         if(stats$CNT[i]<stats$n[i]) {
           warning(paste("Not enough samples for ", stats$GRP[i], ": required ",stats$n[i], " available ", stats$CNT[i], sep=''))
@@ -81,10 +82,10 @@ idaSample <- function(bdf, n, stratCol=NULL,stratVals=NULL,stratProbs=NULL,dbPre
         
         if(!fetchFirst) {
           query <- paste("(SELECT ",paste(cols, collapse=","),",RAND() AS P_RAND_INDEX FROM ",idadf.from(bdf)," A ",ifelse(dbPreSamplePercentage<100,paste(" TABLESAMPLE BERNOULLI(",dbPreSamplePercentage,") ",sep=''),"")," WHERE \"",stratCol,"\" = '",stats$GRP[i],"'", 
-              ifelse(nchar(bdf@where),paste(" AND ",bdf@where,sep=''),'')," ORDER BY P_RAND_INDEX FETCH FIRST ",stats$n[i], " ROWS ONLY)",sep='');
+              ifelse(nchar(bdf@where),paste(" AND ",bdf@where,sep=''),'')," ORDER BY P_RAND_INDEX FETCH FIRST ",format(stats$n[i], scientific = FALSE), " ROWS ONLY)",sep='');
         } else  {
           query <- paste("(SELECT ",paste(cols, collapse=",")," FROM ",idadf.from(bdf)," A  WHERE \"",stratCol,"\" = '",stats$GRP[i],"'", 
-              ifelse(nchar(bdf@where),paste(" AND ",bdf@where,sep=''),'')," FETCH FIRST ",stats$n[i], " ROWS ONLY)",sep='');
+              ifelse(nchar(bdf@where),paste(" AND ",bdf@where,sep=''),'')," FETCH FIRST ",format(stats$n[i], scientific = FALSE), " ROWS ONLY)",sep='');
         }
         
         queries <- c(queries,query);
@@ -97,9 +98,9 @@ idaSample <- function(bdf, n, stratCol=NULL,stratVals=NULL,stratProbs=NULL,dbPre
     sampleSize <- as.integer(n);
     
     if(!fetchFirst) {
-      result <- idaQuery("SELECT ",paste( cols, collapse=","),",RAND() AS P_RAND_INDEX FROM ",idadf.from(bdf),ifelse(dbPreSamplePercentage<100,paste(" TABLESAMPLE BERNOULLI(",dbPreSamplePercentage,") ",sep=''),""), ifelse(nchar(bdf@where),paste(" WHERE ",bdf@where,sep=''),'')," ORDER BY P_RAND_INDEX FETCH FIRST ",sampleSize, " ROWS ONLY");
+      result <- idaQuery("SELECT ",paste( cols, collapse=","),",RAND() AS P_RAND_INDEX FROM ",idadf.from(bdf),ifelse(dbPreSamplePercentage<100,paste(" TABLESAMPLE BERNOULLI(",dbPreSamplePercentage,") ",sep=''),""), ifelse(nchar(bdf@where),paste(" WHERE ",bdf@where,sep=''),'')," ORDER BY P_RAND_INDEX FETCH FIRST ",format(sampleSize, scientific = FALSE), " ROWS ONLY");
     } else {
-      result <- idaQuery("SELECT ",paste( cols, collapse=",")," FROM ",idadf.from(bdf),ifelse(nchar(bdf@where),paste(" WHERE ",bdf@where,sep=''),'')," FETCH FIRST  ",sampleSize, " ROWS ONLY");
+      result <- idaQuery("SELECT ",paste( cols, collapse=",")," FROM ",idadf.from(bdf),ifelse(nchar(bdf@where),paste(" WHERE ",bdf@where,sep=''),'')," FETCH FIRST  ",format(sampleSize, scientific = FALSE), " ROWS ONLY");
     }
   }
   result$P_RAND_INDEX <- NULL;

@@ -25,6 +25,11 @@ ida.list <- function (type='public',user=NULL) {
   
   #Get current user
   currentUser <- idaScalarQuery("select trim(current_user) from sysibm.sysdummy1");
+  roleName <- idaCheckSharing()
+  if(is.null(roleName)&&(type=='public')) {
+    warning('Sharing R objects is not supported on this platform, creating private list instead')
+    type <- 'private'
+  }
   
   #Check if the tables are there already if no other user is given
   if((is.null(user))||(currentUser==user)) {
@@ -32,12 +37,15 @@ ida.list <- function (type='public',user=NULL) {
       
       tableName <- paste('"',currentUser,'".',publicTablePrefix,sep='')
       tableNameMeta <- paste('"',currentUser,'".',publicTablePrefix,"_META",sep='')
+      roleName <- idaCheckSharing()
+      if(is.null(roleName)) {
+        stop("Sharing R objects is not enabled on this platform.")
+      }
       if(!idaExistTable(tableName)) {
-      	checkRole()
-        createIdaListTable(tableName,'public')
+          createIdaListTable(tableName,'public',roleName)
       }
       if(!idaExistTable(tableNameMeta)) {
-        createIdaListMetaTable(tableNameMeta,'public')
+        createIdaListMetaTable(tableNameMeta,'public',roleName)
         createMetaTableContent(tableName,tableNameMeta)
       }
     } else if(type=='private') {
@@ -61,8 +69,11 @@ ida.list <- function (type='public',user=NULL) {
     } else {
       stop("The only types allowed are public and private")			
     }
+   
+    texists <- F
+    try({idaQuery("SELECT COUNT(*) FROM ",tableName);texists<-T},silent=T)
     
-    if(!idaExistTable(tableName)) {
+    if(!texists) {
       stop("The user did not create a table for R object storage yet.")			
     }
   }
@@ -71,29 +82,22 @@ ida.list <- function (type='public',user=NULL) {
 }
 
 ################ Internal utilities ############################
-createIdaListTable <- function(tableName,type) {
+createIdaListTable <- function(tableName,type,roleName) {
 
   idaQuery("CREATE TABLE ", tableName, " (OBJID VARCHAR(2000), SID INTEGER, SNIPPET VARCHAR(30000))");
   if(type=='public') {
-    idaQuery("GRANT SELECT ON ",tableName," TO R_USERS_PUBLIC");
+    idaQuery("GRANT SELECT ON ",tableName," TO ",roleName);
   }
 }
 
-createIdaListMetaTable <- function(tableName,type) {
+createIdaListMetaTable <- function(tableName,type,roleName) {
   idaQuery("CREATE TABLE ", tableName, " (OBJID VARCHAR(2000),SIZE BIGINT, DATE_CREATION VARCHAR(100),CATEGORY VARCHAR(1000))");
   if(type=='public') {
-    idaQuery("GRANT SELECT ON ",tableName," TO R_USERS_PUBLIC");
+    idaQuery("GRANT SELECT ON ",tableName," TO ",roleName);
   }
 }
 
-checkRole <- function() {
-  if(!idaCheckRole("R_USERS_PUBLIC")) {
-    stop("To enable sharing of R objects a role with name R_USERS_PUBLIC needs to be created first.")
-    return(F)
-  } else {
-    return(T)
-  }
-}
+
 
 
 ################ Methods ############################

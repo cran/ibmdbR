@@ -52,7 +52,8 @@ idaDotProductSQL <- function(idadf,colNames,intercept) {
     
     query <- paste("SELECT ", paste(queryList,sep=',',collapse=',')," FROM ",idadf.from(idadf),sep='');
     res <- idaQuery(query);
-
+    res[[length(res)]] <- as.numeric(res[[length(res)]])
+    
 	if (nrow(res[complete.cases(res),]) == 0) {
 		stop("There is no valid data in the input table for building the model. Note that the rows with missing values in your input data are ignored.");
 	}
@@ -133,7 +134,7 @@ idaDotProductUDTF <- function(idadf,colNames,intercept, limit) {
 	cols <- as.character(tableDef[(order(tableDef[,"valType"], decreasing=T)), "name"]);
 	
 	# workaround: can be removed when TABLE WITH FINAL is supported
-	rowCount <- idaQuery("SELECT COUNT(*) FROM ",idadf.from(idadf));
+	rowCount <- as.numeric(idaScalarQuery("SELECT COUNT(*) FROM ",idadf.from(idadf)));
 	if (rowCount == 0) {
 		stop("There is no valid data in the input table for building the model. Note that the rows with missing values in your input data are ignored.");
 	}
@@ -179,6 +180,10 @@ idaDotProductUDTF <- function(idadf,colNames,intercept, limit) {
 		
 	} else cardinalities <- "''"
 	
+    #Fix for oracle compatibility mode
+    if(cardinalities=="''")
+      cardinalities <- "' '"
+    
 	# Put together the query that calls the UDTF to calculate the co-variance matrix
 	# Expected order of columns: target, (intercept,) continuous columns, nominal columns 
 	queryList <- c();

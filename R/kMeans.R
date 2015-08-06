@@ -34,7 +34,7 @@ idaKMeans <- function(
   
   colu = data@cols
   if (!(id %in% colu))
-    stop(simpleError(paste("Id variable is not avaliable in ida.data.frame:", id)))
+    stop(simpleError(paste("Id variable is not available in ida.data.frame:", id)))
   id.no.quotes <- id
   id  <- paste('"',id,'"',sep='');
   
@@ -173,7 +173,7 @@ predict.idaKMeans <- function(object, newdata, id,...) {
   
   colu = newData@cols
   if (!(id %in% colu))
-    stop(simpleError(paste("Id variable is not avaliable in ida.data.frame:", id)))
+    stop(simpleError(paste("Id variable is not available in ida.data.frame:", id)))
   
   id  <- paste('\"',id,'\"',sep="")
   tmpView <- idaCreateView(newData)

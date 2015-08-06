@@ -57,7 +57,7 @@ idaParseRFormula <- function(form, idadf){
     }	
   }	 	
   if (!all(allCols %in% colu))
-    stop(paste("Some variables are not avaliable in ida.data.frame:", paste(setdiff(allCols, colu),collapse=", ")))
+    stop(paste("Some variables are not available in ida.data.frame:", paste(setdiff(allCols, colu),collapse=", ")))
   
   list(cols=cols,colLevels=colLevels, intercept=addIntercept, response=vars[isResponse])
 }

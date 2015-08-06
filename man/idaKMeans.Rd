@@ -48,8 +48,8 @@ idaKMeans(
 	\item{maxiter}{The maximum number of iterations to be used to calculate the k-means clusters. A larger 
 	number of iterations increases both the precision of the results and the amount of time required to 
 	calculate them. }
-	\item{distance}{The distance function that is to be used. This must be set to \code{"euclidean"}, which 
-	causes the squared Euclidean distance to be used.}
+	\item{distance}{The distance function that is to be used. This can be set to \code{"euclidean"}, which 
+	causes the squared Euclidean distance to be used, or \code{"norm_euclidean"}, which causes normalized euclidean distance to be used.}
 	\item{outtable}{The name of the output table that is to contain the results of the operation. When NULL 
 	is specified, a table name is generated automatically.} 
 	\item{randseed}{The seed for the random number generator.}
@@ -68,17 +68,22 @@ idaKMeans(
 	either the maximum number of iterations is reached or until two iterations return identical results. 
 	Variables with missing values are set zero for distance calculation.
 
-	The parameter \code{modelname} can be used to decide under which name the model is stored in the database.
-    This name can be used to retrieve or drop the model later (\code{\link{idaRetrieveModel}},\code{\link{idaDropModel}}).
+	Models are stored persistently in database under the name \code{modelname}. Model names cannot have more than 64 characters and
+    cannot contain white spaces. They need to be quoted like table names, otherwise they will be treated upper case by default. Only one
+    model with a given name is allowed in the database at a time. If a model with \code{modelname} already exists, you need to drop it with \code{idaDropModel}
+    first before you can create another one with the same name. The model name can be used to retrieve the model later (\code{\link{idaRetrieveModel}}).
 	
     The output of the print function for a idaKMeans object is:
+    
+    \itemize{
 
-	- A vector containing a list of centers
-	- A vector containing a list of cluster sizes
-	- A vector containing a list of the number of elements in each cluster
-	- A data frame or the name of the table containing the calculated cluster assignments
-	- The within-cluster sum of squares (which indicates cluster density)
-	- The names of the slots that are available in the idaKMeans object
+	\item A vector containing a list of centers
+	\item A vector containing a list of cluster sizes
+	\item A vector containing a list of the number of elements in each cluster
+	\item A data frame or the name of the table containing the calculated cluster assignments
+	\item The within-cluster sum of squares (which indicates cluster density)
+	\item The names of the slots that are available in the idaKMeans object
+	}
 }
 
 \value{

@@ -1,9 +1,9 @@
 Package: ibmdbR
-Version: 1.36.7
+Version: 1.42.2
 Title: IBM in-Database Analytics for R
 Author: IBM Corporation
 Maintainer: Michael Wurst <inza@de.ibm.com>
-Depends: R (>= 2.15.1), methods, RODBC, MASS
+Depends: R (>= 2.15.1), methods, RODBC, MASS, Matrix, arules
 Description: Functionality required to efficiently use R with
         IBM DB2(C) for Linux, Unix and Windows as well as IBM dashDB(C).
         Many basic and complex R operations are pushed down into the database, which removes
@@ -11,7 +11,7 @@ Description: Functionality required to efficiently use R with
         the underlying database. 
 License: GPL-3
 LazyLoad: Yes
-Packaged: 2015-03-07 22:27:23 UTC; mwurst
+Packaged: 2015-08-06 07:14:50 UTC; mwurst
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2015-03-08 07:18:11
+Date/Publication: 2015-08-06 15:17:57

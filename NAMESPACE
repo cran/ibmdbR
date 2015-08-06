@@ -15,14 +15,19 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>. 
 #
 
-import(RODBC)
-import(MASS)
-#import(arules)
-#import(Matrix)
 importFrom("graphics", "hist")
 importFrom("stats", "cov")
-importFrom("utils", "head", "tail")
+importFrom("utils", "head")
 importFrom("methods", "show")
+
+importFrom("methods", "as", "new", "setMethod", "signature")
+importFrom("stats", "complete.cases", "pt", "runif", "setNames","terms", "weights")
+importFrom("utils", "object.size")
+
+import(RODBC)
+import(MASS)
+import(Matrix)
+import(arules)
 
 S3method(predict, idaKMeans)
 S3method(predict, idaNaiveBayes)
@@ -64,15 +69,15 @@ export(
 	idaNaiveBayes,
 	predict.idaNaiveBayes,
 	print.idaNaiveBayes,
- # 	idaArule,
-  #	idaApplyRules,
+  	idaArule,
+  	idaApplyRules,
   
 	#Model management
 	idaRetrieveModel,
 	idaListModels,
 	idaDropModel,
 	idaModelExists,
-#	idaGetModelname,
+	idaGetModelname,
 	
 	#Merge
 	idaMerge,

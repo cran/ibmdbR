@@ -40,7 +40,7 @@ idaNaiveBayes(form,data,id="id",modelname=NULL)
 	\item{object}{An object of the class \code{idaNaiveBayes} to be predicted.}
 	\item{newdata}{A IDA data frame that contains the data to which to apply the model.}
 	\item{x}{An object of the class \code{idaNaiveBayes} to be printed.} 
-	\item{...}{Additional parameters to pass to the predict method.} 
+	\item{...}{Additional parameters to pass to the print and predict method.} 
 	
 }
 \details{
@@ -50,6 +50,13 @@ idaNaiveBayes(form,data,id="id",modelname=NULL)
 	Continuous input variables are discretized using
 	equal width discretization. Missing values are ignored on a record and attribute level when calculating the
 	conditional probabilities. 
+	
+		Models are stored persistently in database under the name \code{modelname}. Model names cannot have more than 64 characters and
+    cannot contain white spaces. They need to be quoted like table names, otherwise they will be treated upper case by default. Only one
+    model with a given name is allowed in the database at a time. If a model with \code{modelname} already exists, you need to drop it with \code{idaDropModel}
+    first before you can create another one with the same name. The model name can be used to retrieve the model later (\code{\link{idaRetrieveModel}}).
+
+	
 }
 \value{
 	The function \code{idaNaiveBayes} returns an object of class \code{"idaNaiveBayes"} and \code{"naiveBayes"} compatible

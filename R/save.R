@@ -18,9 +18,9 @@
 idaSave <- function (idaConn, dfrm, tblName="", rowName="", conType = "odbc") {
   if (conType == "odbc") {
     if (rowName != ""){
-      sqlSave(idaConn, dfrm, tablename = tblName, rownames = rowName, addPK=TRUE)
+      sqlSave(idaConn, dfrm, tablename = tblName, rownames = rowName, addPK=TRUE,fast=ifelse(idaIsOracleMode(),F,T))
     } else {
-      sqlSave(idaConn, dfrm, tablename = tblName, rownames = FALSE)
+      sqlSave(idaConn, dfrm, tablename = tblName, rownames = FALSE,fast=ifelse(idaIsOracleMode(),F,T))
     }
   }
 }

@@ -27,17 +27,17 @@ idaDropModel <- function(modelname) {
   idaQuery("CALL IDAX.DROP_MODEL('model=",model,"')")
 }
 
-#idaGetModelname <- function(object) {
-#  if(inherits(object,"rules")) {
-#    return(object@info$model)
-#  } else if(inherits(object,"idaKMeans")){
-#    return(object$model)
-#  } else if(inherits(object,"idaNaiveBayes")) {
-#    return(object$model) 
-#  } else {
-#    stop("Model type not supported")    
-#  }
-#}
+idaGetModelname <- function(object) {
+  if(inherits(object,"rules")) {
+    return(object@info$model)
+  } else if(inherits(object,"idaKMeans")){
+    return(object$model)
+  } else if(inherits(object,"idaNaiveBayes")) {
+    return(object$model) 
+  } else {
+    stop("Model type not supported")    
+  }
+}
 
 idaRetrieveModel <- function(modelname) {
   xx <- parseTableName(modelname);
@@ -47,13 +47,11 @@ idaRetrieveModel <- function(modelname) {
   
   if(idaExistTable(paste('"',modelSchema,'"."',model,'_CLUSTERS"',sep=""))) {
     idaRetrieveKMeansModel(modelname)
-  } else {#if(idaExistTable(paste('"',modelSchema,'"."',model,'_DISC"',sep=""))) {
-    idaRetrieveNBModel(modelname)
-  } 
-#    else 
-#    {
-#    idaRetrieveRulesModel(modelname) 
-#  }
+  } else if(idaExistTable(paste('"',modelSchema,'"."',model,'_ITEMS"',sep=""))) {
+    idaRetrieveRulesModel(modelname)
+  } else {
+    idaRetrieveNBModel(modelname) 
+  }
 }
 
 idaModelExists <- function(modelname) {

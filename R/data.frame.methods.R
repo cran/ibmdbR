@@ -114,14 +114,14 @@ setMethod("colnames", signature(x="ida.data.frame"),
 setMethod("head", signature(x="ida.data.frame"),
     function(x, n = 6, ...) {
       if (n >= 0) {
-        ans <- idaQuery(idadf.query(x), " FETCH FIRST ", n, " ROWS ONLY");
+        ans <- idaQuery(idadf.query(x), " FETCH FIRST ", format(n, scientific = FALSE), " ROWS ONLY");
         
         if (nrow(ans) > 0) rownames(ans) <- 1:nrow(ans);
         return(ans)
       } else {
         nr <- nrow(x)
         n <- abs(n)
-        ans <- idaQuery(idadf.query(x), " FETCH FIRST ", nr - n, " ROWS ONLY")
+        ans <- idaQuery(idadf.query(x), " FETCH FIRST ", format(nr - n, scientific = FALSE), " ROWS ONLY")
         
         if ((nr-n) != 0) rownames(ans) <- 1:(nr-n);
         return(ans)

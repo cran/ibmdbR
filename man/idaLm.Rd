@@ -63,11 +63,12 @@ $rank is the rank.
 $df.residuals is the number of degrees of freedom associated with the residuals. 
 
 $coefftab is a is a vector with four values:
-- The slope and y-intercept of the line that best fits the input data
-- The standard error
-- The t-value
-- The p-value
-
+\itemize{
+\item The slope and y-intercept of the line that best fits the input data
+\item The standard error
+\item The t-value
+\item The p-value
+}
 $Loglike is the log likelihood ratio. 
 
 $AIC is the Akaike information criterion. This is a measure of the relative quality of the model.

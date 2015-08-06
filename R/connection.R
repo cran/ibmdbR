@@ -28,6 +28,16 @@ idaInit <- function(con,jobDescription=NULL) {
   assign("idaRGlobal", new.env(parent = baseenv()), envir=baseenv())
   assign("p_idaConnection", con, envir = idaRGlobal) 
   
+  #Check Oracle compatibility
+  regVars <- idaQuery("SELECT reg_var_name, reg_var_value, level FROM table(REG_LIST_VARIABLES()) as reg")
+  compVec <- regVars[regVars$REG_VAR_NAME=='DB2_COMPATIBILITY_VECTOR',2] 
+  
+  if(length(compVec)) {
+    if(compVec=='ORA') {
+      assign("p_db2_comp", "ORA", envir = idaRGlobal) 
+    }
+  }
+  
   script <- jobDescription
   #Set the application parameters
   if(is.null(script)) {
@@ -46,15 +56,19 @@ idaInit <- function(con,jobDescription=NULL) {
   try({idaQuery(paste("CALL WLM_SET_CLIENT_INFO(NULL,NULL,'ibmdbR','",script,"',NULL)",sep=''))},silent=T)
    
   #Check what functions are available in the database
-  #c1 <- idaCheckProcedure("KMEANS","idaKMeans",T)
-  #c2 <- idaCheckProcedure("NAIVEBAYES","idaNaiveBayes",T)
-  #c3 <- T
+  c1 <- idaCheckProcedure("KMEANS","idaKMeans",T)
+  c2 <- idaCheckProcedure("NAIVEBAYES","idaNaiveBayes",T)
+  c3 <- T
   #  c3 <- idaCheckProcedure("ASSOCRULES","idaArule",T) 
   
-  #if(!(c1&&c2&&c3)) {
-  #  message("Note that not all backend databases provide push-down capabilities for all analytical functions.")
-  #}
+  if(!(c1&&c2&&c3)) {
+    message("Note that not all backend databases provide push-down capabilities for all analytical functions.")
+  }
   
+}
+
+idaIsOracleMode <- function() {
+  return(exists("p_db2_comp",envir=idaRGlobal)&&(get("p_db2_comp",envir=idaRGlobal)=='ORA'))
 }
 
 idaCheckConnection <- function () {
@@ -66,7 +80,7 @@ idaCheckConnection <- function () {
 idaCheckProcedure <- function(procName, algName, verbose=F) {
   
   catQuery <- paste("SELECT COUNT(*) FROM SYSCAT.ROUTINES WHERE ROUTINENAME = '",procName,"' AND ROUTINEMODULENAME = 'IDAX'",sep='') 
-  available <- idaScalarQuery(catQuery)>0;
+  available <- as.numeric(idaScalarQuery(catQuery))>0;
   
   if(verbose&&!available) {
     message(paste("Function ",algName, " ",ifelse(available,"","not "),"available for this connection.",sep=''))
@@ -76,7 +90,32 @@ idaCheckProcedure <- function(procName, algName, verbose=F) {
 }
 
 idaCheckRole <- function(roleName) {
-  catQuery <- paste("SELECT COUNT(*) FROM SYSCAT.ROLES WHERE ROLENAME = '",roleName,"'",sep='') 
-  available <- idaScalarQuery(catQuery)>0;
-  return(available)
+  #catQuery <- paste("SELECT COUNT(*) FROM SYSCAT.ROLES WHERE ROLENAME = '",roleName,"'",sep='') 
+  #available <- idaScalarQuery(catQuery)>0;
+  
+  #if(!available)
+  #  return(FALSE)
+  
+  catQuery <- paste("SELECT COUNT(*) FROM SYSCAT.ROLEAUTH WHERE ROLENAME = '",roleName,"' AND GRANTEE=CURRENT USER",sep='') 
+  granted <- as.numeric(idaScalarQuery(catQuery))>0;
+  
+  return(granted)
 }
+
+idaCheckSharing <- function() {
+  
+  roledashDB <- "DASHDB_ENTERPRISE_USER"
+  roleDB2 <- "R_USERS_PUBLIC"
+
+  #First try dashDB
+  if(idaCheckRole(roledashDB)) {
+    return(roledashDB)
+  } else if(idaCheckRole(roleDB2)) {
+    return(roleDB2)
+  } else {
+    return(NULL)
+  }
+  
+  
+}
+

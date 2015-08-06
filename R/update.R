@@ -18,9 +18,9 @@
 idaUpdate <- function (db2Conn, updf, dfrm, idaIndex="", conType = "odbc") {
   if (conType == "odbc") {
     if (idaIndex != ""){
-      sqlUpdate(db2Conn, updf, dfrm, index = idaIndex)
+      sqlUpdate(db2Conn, updf, dfrm, index = idaIndex,fast=ifelse(idaIsOracleMode(),F,T))
     } else {
-      sqlUpdate(db2Conn, updf, dfrm)
+      sqlUpdate(db2Conn, updf, dfrm,fast=ifelse(idaIsOracleMode(),F,T))
     }
   }
 }

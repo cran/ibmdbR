@@ -107,14 +107,14 @@ parseTableName <- function(tableName,removeQuotes=T,disallowQuotes=F) {
 idaExistTable <- function (tableName) {
   idaCheckConnection();
   cmp <- prepareCatalogLookup(tableName)
-  tableExists <- as.logical(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.TABLES WHERE ", cmp));
+  tableExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.TABLES WHERE ", cmp))>0);
   return(tableExists);
 }
 
 idaIsView <- function (tableName) {
   idaCheckConnection();
   cmp <- paste(prepareCatalogLookup(tableName), " AND TYPE = 'V'",sep=''); 
-  viewExists <- as.logical(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.TABLES WHERE ", cmp));
+  viewExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.TABLES WHERE ", cmp))>0);
   return(viewExists);
 }
 
