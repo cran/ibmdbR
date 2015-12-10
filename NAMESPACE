@@ -19,20 +19,33 @@ importFrom("graphics", "hist")
 importFrom("stats", "cov")
 importFrom("utils", "head")
 importFrom("methods", "show")
+importFrom("rpart.plot","prp")
+importFrom("Matrix","Matrix")
+importFrom("Matrix","sparseMatrix")
 
 importFrom("methods", "as", "new", "setMethod", "signature")
 importFrom("stats", "complete.cases", "pt", "runif", "setNames","terms", "weights")
 importFrom("utils", "object.size")
+importFrom("grDevices", "dev.off", "png")
+importFrom("stats", "as.formula", "reshape")
 
 import(RODBC)
 import(MASS)
-import(Matrix)
 import(arules)
+import(rpart)
+import(ggplot2)
+
 
 S3method(predict, idaKMeans)
 S3method(predict, idaNaiveBayes)
 S3method(print, idaKMeans)
 S3method(print, idaNaiveBayes)
+S3method(predict, idaTree)
+S3method(predict, idaLm)
+S3method(plot, idaTree)
+S3method(plot, idaLm)
+S3method(print, idaLm)
+
 
 exportMethods("cov", "hist", "print",
 # ida.data.frame
@@ -40,7 +53,7 @@ exportMethods("cov", "hist", "print",
 	 "dim", "NROW", "NCOL", "length", "head",  "names",
 	"mean","min","max", "colnames", "sd", "var","cov", "cor", "summary","as.vector",
 	# ida.data.frame.rows
-	"|", "&", "$",ifelse,as.character,as.integer,as.numeric)	
+	"|", "&", "$", ifelse,as.character,as.integer,as.numeric)	
 
 export(
 	# ida.data.frame
@@ -63,6 +76,9 @@ export(
 	
 	#Mining methods
 	idaLm,
+	plot.idaLm,
+	print.idaLm,
+	predict.idaLm,
 	idaKMeans,
 	print.idaKMeans,
 	predict.idaKMeans,
@@ -71,6 +87,9 @@ export(
 	print.idaNaiveBayes,
   	idaArule,
   	idaApplyRules,
+  	idaTree,
+  	plot.idaTree,
+  	predict.idaTree,
   
 	#Model management
 	idaRetrieveModel,
@@ -98,4 +117,5 @@ export(
 	idadf,
 	idaSave,
 	idaUpdate
+	
 )

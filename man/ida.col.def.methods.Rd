@@ -26,6 +26,7 @@
 \alias{ifelse,ida.col.def-method}
 \alias{print,ida.col.def-method}
 \alias{db.is.null}
+\alias{format.ida.col.def}
 
 \title{Available methods for ida.col.def}
 \description{

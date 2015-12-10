@@ -80,7 +80,7 @@ rules.
 
 idf <- ida.data.frame("GOSALES.ORDER_DETAILS")
 
-r <- idaArule(idf,tid="ORDER_NUMBER",item="PRODUCT_TYPE_CODE",minsupport=0.01)
+r <- idaArule(idf,tid="ORDER_NUMBER",item="PRODUCT_NUMBER",minsupport=0.01)
 
 inspect(r)
 

@@ -18,13 +18,12 @@
 idaTable<-function (idadf,max.entries=1000) 
 {
   
-  bdf <- idadf
   
-  if (!is.ida.data.frame(bdf)) 
+  if (!is.ida.data.frame(idadf)) 
     stop(simpleError("idaTable is valid only for ida.data.frame objects"))
    
   ####### Identifying Categorical Fields #########
-  res <- idaTableDef(bdf,F)
+  res <- idaTableDef(idadf,F)
   categorical <- as.vector(res[res$valType=='CATEGORICAL','name'])
   args<-categorical
   
@@ -36,7 +35,7 @@ idaTable<-function (idadf,max.entries=1000)
   
   for (a in args) {
     
-    levels<-idaLevels(bdf,a) 	 #Select Levels of the Column
+    levels<-idaLevels(idadf,a) 	 #Select Levels of the Column
     o<-order(levels[1])		 #Order them in Ascending
     nm<-c(nm,list(levels[o,1]))	 #List of Level Names
     nl <- length(unlist(levels))	 #Number of Levels			 
@@ -51,7 +50,7 @@ idaTable<-function (idadf,max.entries=1000)
   
   nmz<-c(nm,list(0))		# An extra column for counting occurences
   com<-expand.grid(nmz)		# Get all possible combinations
-  bin<-idaFactors(bdf,args)		# Get actually Existing Combinations	
+  bin<-idaFactors(idadf,args)		# Get actually Existing Combinations	
   names(com)<-names(bin)
   total<-rbind(bin,com)
   mat<-total[!duplicated(total[-length(total)]),]   # Remove duplicated combinations generated previously
@@ -69,16 +68,16 @@ idaTable<-function (idadf,max.entries=1000)
 
 ########################## idaLevels #####################################################
 
-idaLevels<-function(bdf,a) {
-  query <- paste("SELECT DISTINCT" ,paste("\"", a, "\"", collapse=",",sep=''), " FROM ",idadf.from(bdf)," ",ifelse(nchar(bdf@where),paste(" WHERE ",bdf@where,sep=''),''))
+idaLevels<-function(idadf,column) {
+  query <- paste("SELECT DISTINCT" ,paste("\"", column, "\"", collapse=",",sep=''), " FROM ",idadf.from(idadf)," ",ifelse(nchar(idadf@where),paste(" WHERE ",idadf@where,sep=''),''))
   return(idaQuery(query));
 }
 
 ########################## idaFactors #####################################################
 
-idaFactors<-function(bdf,args) {
+idaFactors<-function(idadf,args) {
   
-  query <- paste("SELECT" ,paste("\"", args, "\"", collapse=",",sep=''),",COUNT(*) as COUNT FROM ",idadf.from(bdf)," ",ifelse(nchar(bdf@where),paste(" WHERE ",bdf@where,sep=''),'')," GROUP BY",paste("\"", args, "\"", collapse=",",sep=''))
+  query <- paste("SELECT" ,paste("\"", args, "\"", collapse=",",sep=''),",COUNT(*) as COUNT FROM ",idadf.from(idadf)," ",ifelse(nchar(idadf@where),paste(" WHERE ",idadf@where,sep=''),'')," GROUP BY",paste("\"", args, "\"", collapse=",",sep=''))
   return(idaQuery(query))
 }
 
@@ -172,7 +171,7 @@ setMethod(f="cor", signature=c(x="ida.data.frame"),
 ########################## sd #############################################################
 setMethod(f="sd", signature=c(x="ida.data.frame"),
     function(x,na.rm=NULL) { 
-      bdf<-x 
+      idadf<-x 
       
       # na.rm
       if (!missing(na.rm) && !is.null(na.rm))
@@ -182,14 +181,14 @@ setMethod(f="sd", signature=c(x="ida.data.frame"),
         stop("No rows in ida.data.frame.")
       }
       
-      col<-bdf@cols
+      col<-idadf@cols
       if(length(col)>1)
         warning("the condition has length > 1 and only the first numeric element will be used")
       
       queryList <- c();
       
       ####### Identifying Numeric Fields #########
-      res <- idaTableDef(bdf,F)
+      res <- idaTableDef(idadf,F)
       numeric <- as.vector(res[res$valType=='NUMERIC','name'])
       
       col<-numeric[1];
@@ -198,10 +197,10 @@ setMethod(f="sd", signature=c(x="ida.data.frame"),
       if (!length(col)) 
         stop("nothing to calculate") 
       
-      n<-NROW(bdf)
-      mean<-idaMean(bdf,col)
+      n<-NROW(idadf)
+      mean<-idaMean(idadf,col)
       queryList <-paste("SUM((", paste("\"", col, "\"", collapse=",",sep=''),"-",mean,")*(",paste("\"", col, "\"", collapse=",",sep=''),"-",mean,"))/",n-1,sep='');
-      queryList<-paste("SELECT ", queryList," FROM ",idadf.from(bdf)," ",ifelse(nchar(bdf@where),paste(" WHERE ",bdf@where,sep=''),''),sep='');
+      queryList<-paste("SELECT ", queryList," FROM ",idadf.from(idadf)," ",ifelse(nchar(idadf@where),paste(" WHERE ",idadf@where,sep=''),''),sep='');
       sd<-sqrt(idaQuery(queryList))
       return(sd[1,1])
     }
@@ -312,29 +311,29 @@ setMethod("cov", signature(x="ida.data.frame", y="ida.data.frame"), cov.ida.data
 
 setMethod(f="summary", signature=c("ida.data.frame"),
     function (object,digits=max(3L, getOption("digits") -3L), maxsum = 7L, ...) {
-      bdf<-object
+      idadf<-object
           
       options(scipen=999)
       
       ####### Identifying Categorical Fields #########
-      res <- idaTableDef(bdf,F)
+      res <- idaTableDef(idadf,F)
       numeric <- as.vector(res[res$valType=='NUMERIC','name'])
       categorical <- as.vector(res[res$valType=='CATEGORICAL','name'])
       
       ####### Calculating Summary Values #############
-      catRes<-idaCategorical(bdf,categorical,maxsum) 
+      catRes<-idaCategorical(idadf,categorical,maxsum) 
       maxsum<-max(7,maxsum)
-      quantiles <- idaQuantiles(bdf,numeric,maxsum,digits)
+      quantiles <- idaQuantiles(idadf,numeric,maxsum,digits)
       
       final<-c(quantiles,catRes)
-      final<-final[intersect(bdf@cols,c(numeric,categorical))]
+      final<-final[intersect(idadf@cols,c(numeric,categorical))]
       final<-unlist(final)
       dim(final) <- c(maxsum, length(numeric)+length(categorical))
       
       ####### Naming the summary columns ############
       blanks <- paste(character(max(10, na.rm = TRUE) + 2L),collapse = " ")
-      pad <- floor(nchar(final[1,])/2 - nchar(intersect(bdf@cols,c(numeric,categorical)))/2)
-      names <- paste0(substring(blanks, 1, pad), intersect(bdf@cols,c(numeric,categorical)))
+      pad <- floor(nchar(final[1,])/2 - nchar(intersect(idadf@cols,c(numeric,categorical)))/2)
+      names <- paste0(substring(blanks, 1, pad), intersect(idadf@cols,c(numeric,categorical)))
       dimnames(final)<-list(rep.int("",maxsum),names)
       attr(final, "class") <- c("table")
       final		
@@ -345,7 +344,7 @@ setMethod(f="summary", signature=c("ida.data.frame"),
 ########################## Categorical ##################################################
 
 
-idaCategorical<-function(bdf,categorical,maxsum=7L) {
+idaCategorical<-function(idadf,categorical,maxsum=7L) {
   
   res<-c();
   output<-list();
@@ -354,7 +353,7 @@ idaCategorical<-function(bdf,categorical,maxsum=7L) {
     
     for(a in categorical){
       
-      query <- paste("SELECT",paste("\"", a, "\"", collapse=",",sep=''),",COUNT(*) FROM",idadf.from(bdf)," ",ifelse(nchar(bdf@where),paste(" WHERE ",bdf@where,sep=''),'')," GROUP BY",paste("\"", a, "\"", collapse=",",sep=''))
+      query <- paste("SELECT",paste("\"", a, "\"", collapse=",",sep=''),",COUNT(*) FROM",idadf.from(idadf)," ",ifelse(nchar(idadf@where),paste(" WHERE ",idadf@where,sep=''),'')," GROUP BY",paste("\"", a, "\"", collapse=",",sep=''))
       
       cf<-idaQuery(query)
       if (length(cf[,1]) > maxsum) {
@@ -387,25 +386,25 @@ idaCategorical<-function(bdf,categorical,maxsum=7L) {
 }
 
 ########################## Quantiles Method 2 (R "default", type=7)########################
-idaQuantiles<-function(bdf,numeric,maxsum=7L,digits=4) {
+idaQuantiles<-function(idadf,numeric,maxsum=7L,digits=4) {
   
   quantiles<-list();
   probs = seq(0, 1, 0.25)
   
   label<-c("Min.","1st Qu.","Median","Mean","3rd Qu.","Max.")  
-  mean<- matrix(idaMean(bdf,numeric), ncol = length(numeric))
+  mean<- matrix(idaMean(idadf,numeric), ncol = length(numeric))
   
   for(i in 1:length(numeric)){
     
     col <- paste("\"", numeric[i], "\"", collapse=",",sep='')
-    query<-paste("SELECT COUNT(*) FROM", idadf.from(bdf),"WHERE ",col,"IS NULL "," ",ifelse(nchar(bdf@where),paste(" AND ",bdf@where,sep=''),''))
-    nas<-idaQuery(query)
+    query<-paste("SELECT COUNT(*) FROM", idadf.from(idadf),"WHERE ",col,"IS NULL "," ",ifelse(nchar(idadf@where),paste(" AND ",idadf@where,sep=''),''))
+    nas<-as.numeric(idaQuery(query))
     
-    n <- NROW(bdf)
+    n <- NROW(idadf)
     
-    if(nas[1,1]<n) {
+    if(nas<n) {
       
-      n<-n- nas[1,1]
+      n<-n- nas
       index <- 1 + (n - 1) * probs
       lo <- floor(index)
       hi <- ceiling(index)
@@ -414,7 +413,7 @@ idaQuantiles<-function(bdf,numeric,maxsum=7L,digits=4) {
       h <- (index - lo)[j]
       where <- paste("", unique, collapse=",",sep='')
       
-      query <- paste("SELECT ",col,"FROM ","(SELECT ROW_NUMBER() over (ORDER BY",col,") as rn,",col,"FROM (", idadf.query(bdf),")) WHERE rn in(",where,")")
+      query <- paste("SELECT ",col,"FROM ","(SELECT ROW_NUMBER() over (ORDER BY",col,") as rn,",col,"FROM (", idadf.query(idadf),")) WHERE rn in(",where,")")
       
       full<-data.matrix(idaQuery(query))
       qs<-full[unique%in%lo,]
@@ -428,10 +427,10 @@ idaQuantiles<-function(bdf,numeric,maxsum=7L,digits=4) {
       qs<-c(qs[1:3],mean[i],qs[4:5])	
       qs <- paste0(format(label), ":", format(qs,digits=digits,nsmall=3), "  ")
       if(nas>0){
-        qs <- c(qs,paste0("NA's   :", format(nas[1,1]), "  "))
+        qs <- c(qs,paste0("NA's   :", format(nas), "  "))
       }
     } else {
-      qs <- paste0("NA's   :", format(nas[1,1]), "  ")
+      qs <- paste0("NA's   :", format(nas), "  ")
     }
     
     length(qs)<-maxsum;
@@ -443,8 +442,8 @@ idaQuantiles<-function(bdf,numeric,maxsum=7L,digits=4) {
 }
 ########################## idaMean #######################################################
 
-idaMean<-function(bdf,numeric) {
-  query <- paste(paste("AVG(\"", numeric, "\") AS ", numeric, collapse=",",sep='')," FROM ", idadf.from(bdf), " ",ifelse(nchar(bdf@where),paste(" WHERE ",bdf@where,sep=''),''))
+idaMean<-function(idadf,numeric) {
+  query <- paste(paste("AVG(\"", numeric, "\") AS ", numeric, collapse=",",sep='')," FROM ", idadf.from(idadf), " ",ifelse(nchar(idadf@where),paste(" WHERE ",idadf@where,sep=''),''))
   m<-idaQuery ("SELECT ", query)
   m<-matrix(unlist(m),nrow=1)
   return(m)

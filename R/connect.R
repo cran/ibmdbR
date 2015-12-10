@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU General Public License 
 # along with this program. If not, see <http://www.gnu.org/licenses/>. 
 #
-idaConnect <- function (dsn, uid = "", pwd = "", conType = "odbc") 
-{
-    if (conType == "odbc") {
-        idaCon <- odbcConnect(dsn, uid, pwd, believeNRows = FALSE)
-        invisible(idaCon)
-        return(idaCon)
-    }
+idaConnect <- function (dsn, uid = "", pwd = "", conType = "odbc") {
+  if(conType == "odbc")
+  {
+    idaCon <- odbcConnect(dsn,uid,pwd,believeNRows = FALSE)
+    invisible(idaCon)
+    return(idaCon)
+  }
 }

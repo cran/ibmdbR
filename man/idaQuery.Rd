@@ -24,7 +24,7 @@ Use these functions to run any SQL query on the database and put the
 results into a \code{data.frame}.
 }
 \usage{
-idaQuery(..., as.is=TRUE)
+idaQuery(..., as.is=TRUE, na.strings = "NA")
 
 idaScalarQuery(..., as.is=TRUE)
 }
@@ -32,6 +32,7 @@ idaScalarQuery(..., as.is=TRUE)
   \item{...}{Any number of query parts which are passed to \code{paste}.}
   \item{as.is}{Specifies whether the result columns are to be converted using RODBC type conversions (as.is=FALSE) or left unconverted (as.is=TRUE).
   For more information about RODBC type conversions, see the descriptions of the functions \code{sqlGetResults} and \code{type.convert}.}
+  \item{na.strings}{character vector of strings to be mapped to NA when reading character data.}
 }
 \details{
 All parts of the input query are concatenated with \code{paste(..., sep="")}

@@ -147,25 +147,48 @@ setMethod("[", signature(x = "ida.data.frame"),
       c <- c()
       # check arguments - columns
       if (try(!is.null(j),silent=TRUE) == TRUE) {
-        if (is.numeric(j))
+        if (is.numeric(j)){
+          colCount <- length(x@cols)
+          for (n in j) {
+            pos <- which(j==n)
+            if (n > colCount) {
+              stop(paste('The ', pos, '-th column index ', n, 
+                         ' in the argument is out of boundary, the maximal column index is ', 
+                         colCount, sep=''))
+            }
+            if (length(pos)>1) {
+              stop(paste('The column index ', n, ' appears more than once in the argument at position ', 
+                         paste(pos, collapse=', '), '.', sep=''))
+            } 
+          }
           c <- c(c,as.integer(j))
-        else if (!is.integer(j))
-          if (is.character(j)){	
-            
+        }
+        else if (is.logical(j)){
+          if (length(j) > length(x@cols))
+            length(j) <- length(x@cols)
+          c <- c(c,which(j))
+        }
+        else if (!is.integer(j)){
+          if (is.character(j)){
             for (n in j){
               if (is.element(n, x@cols))
                 c <- c(c, which(names(x)==n))
-              else 
-              if (is.element(tolower(n), x@cols))
+              else if (is.element(tolower(n), x@cols))
                 stop(paste("No column named ", n, " in the table. Column names are case-sensitive. Did you mean ", tolower(n), "?"))
               else if (is.element(toupper(n), x@cols))
                 stop(paste("No column named ", j, " in the table. Column names are case-sensitive. Did you mean ", toupper(n), "?"))
-              else stop(paste("No column named ", n, " in the table. Column names are case-sensitive.  Candidates are: ", paste(idaListTableColumns(x@table), collapse=', '), "."))
-              
+              else 
+                stop(paste("No column named ", n, " in the table. Column names are case-sensitive.  Candidates are: ", paste(idaListTableColumns(x@table), collapse=', '), "."))
+              pos <- which(j==n)
+              if (length(pos)>1) {
+                stop(paste("The name '", n, "' appears more than once in the column argument at position ", 
+                           paste(pos, collapse=', '), '.', sep=''))
+              }
             }
           }
           else
             stop("columns argument must be integer or character")
+        }
       }
       # check arguments i (row)
       
@@ -190,7 +213,8 @@ setMethod("[", signature(x = "ida.data.frame"),
             x@where <- newRowSelection
           else
             x@where <- paste("(", x@where, ") AND (", newRowSelection, ")", sep="")
-        }}
+        }
+      }
       # compute the right subset of columns
       if (!is.null(x@cols) && !is.null(c))
         x@cols <- x@cols[c]
@@ -229,7 +253,7 @@ setMethod("$<-", signature(x = "ida.data.frame"),
           stop("Column definition is not valid for a ida.data.frame, please refer to the documentation of ida.data.frame for details on usage.")
         
         if(((value@table)@table != x@table)||((value@table)@where!=x@where))
-          stop("Column defintions are only allowed on the same underlying table. Please use idaMerge first to join the tables.");
+          stop("Column definitions are only allowed on the same underlying table. Please use idaMerge first to join the tables.");
         
         if(value@aggType!='none') {
           stop("Cannot add column that contains aggregation term to ida.data.frame.")

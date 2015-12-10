@@ -15,12 +15,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>. 
 #
 
-idaUpdate <- function (db2Conn, updf, dfrm, idaIndex="", conType = "odbc") {
+idaUpdate <- function (db2Conn, updf, dfrm, idaIndex = "", conType = "odbc") {
   if (conType == "odbc") {
     if (idaIndex != ""){
-      sqlUpdate(db2Conn, updf, dfrm, index = idaIndex,fast=ifelse(idaIsOracleMode(),F,T))
+      sqlUpdate(db2Conn, dfrm, updf, index = idaIndex,fast=ifelse(idaIsOracleMode(), F, T))
     } else {
-      sqlUpdate(db2Conn, updf, dfrm,fast=ifelse(idaIsOracleMode(),F,T))
+      sqlUpdate(db2Conn, dfrm, updf, fast = ifelse(idaIsOracleMode(), F, T))
     }
   }
 }

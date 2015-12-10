@@ -18,15 +18,15 @@
 
 idaInit <- function(con,jobDescription=NULL) {
   #Check if the connection is open?
-  conOpen <- F;
-  try({idadf(con,'select trim(current_schema) from sysibm.sysdummy1');conOpen<-T},silent=T);
+  conOpen <- FALSE;
+  try({idadf(con,'select trim(current_schema) from sysibm.sysdummy1');conOpen<-TRUE},silent=TRUE);
   if(!conOpen) {
     stop("con is not an open connection, please use idaConnect() to create an open connection to the data base.");
   }
   
   #Put the connection object into a new environment
   assign("idaRGlobal", new.env(parent = baseenv()), envir=baseenv())
-  assign("p_idaConnection", con, envir = idaRGlobal) 
+  assign("p_idaConnection", con, envir = idaRGlobal)
   
   #Check Oracle compatibility
   regVars <- idaQuery("SELECT reg_var_name, reg_var_value, level FROM table(REG_LIST_VARIABLES()) as reg")
@@ -53,15 +53,18 @@ idaInit <- function(con,jobDescription=NULL) {
   }
     
   #Set the current connection parameters for job monitoring
-  try({idaQuery(paste("CALL WLM_SET_CLIENT_INFO(NULL,NULL,'ibmdbR','",script,"',NULL)",sep=''))},silent=T)
+  try({idaQuery(paste("CALL WLM_SET_CLIENT_INFO(NULL,NULL,'ibmdbR','",script,"',NULL)",sep=''))},silent=TRUE)
    
   #Check what functions are available in the database
-  c1 <- idaCheckProcedure("KMEANS","idaKMeans",T)
-  c2 <- idaCheckProcedure("NAIVEBAYES","idaNaiveBayes",T)
-  c3 <- T
-  #  c3 <- idaCheckProcedure("ASSOCRULES","idaArule",T) 
+  c1 <- idaCheckProcedure("KMEANS","idaKMeans",TRUE)
+  c2 <- idaCheckProcedure("NAIVEBAYES","idaNaiveBayes",TRUE)
+  c3 <- idaCheckProcedure("ASSOCRULES","idaArule",TRUE)
+  c4 <- idaCheckProcedure("LINEAR_REGRESSION","idaLm",TRUE)
+  #c5 <- idaCheckProcedure("SEQRULES","idaSeqRules",TRUE)
+  c5 <- T
   
-  if(!(c1&&c2&&c3)) {
+  
+  if(!(c1&&c2&&c3&&c4&&c5)) {
     message("Note that not all backend databases provide push-down capabilities for all analytical functions.")
   }
   
@@ -74,10 +77,10 @@ idaIsOracleMode <- function() {
 idaCheckConnection <- function () {
   # make sure that the connection exists
   if ((!exists("p_idaConnection",envir=idaRGlobal)) || is.null(get("p_idaConnection",envir=idaRGlobal)))
-    stop("The connection is not set, please use idaAnalyticsInit(con), where con is an open connection.", call.=FALSE)
+    stop("The connection is not set, please use idaInit(con), where con is an open connection.", call.=FALSE)
 }
 
-idaCheckProcedure <- function(procName, algName, verbose=F) {
+idaCheckProcedure <- function(procName, algName, verbose=FALSE) {
   
   catQuery <- paste("SELECT COUNT(*) FROM SYSCAT.ROUTINES WHERE ROUTINENAME = '",procName,"' AND ROUTINEMODULENAME = 'IDAX'",sep='') 
   available <- as.numeric(idaScalarQuery(catQuery))>0;

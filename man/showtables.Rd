@@ -23,11 +23,12 @@
   current database.
 }
 \usage{
-idaShowTables(showAll=FALSE)
+idaShowTables(showAll=FALSE, matchStr=NULL)
 }
 
 \arguments{
   \item{showAll}{List all tables that are listed in the catalog of the current database (TRUE) or only those tables that are in the current schema (FALSE).}
+  \item{matchStr}{If not NULL, only tables that contain the character string in this argument will be returned.}
 }
 
 \value{

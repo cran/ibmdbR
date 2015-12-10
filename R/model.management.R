@@ -28,12 +28,10 @@ idaDropModel <- function(modelname) {
 }
 
 idaGetModelname <- function(object) {
-  if(inherits(object,"rules")) {
+  if(inherits(object,c("rules", "sequencerules"))) {
     return(object@info$model)
-  } else if(inherits(object,"idaKMeans")){
+  } else if(inherits(object,c("idaKMeans","idaNaiveBayes","idaLm"))){
     return(object$model)
-  } else if(inherits(object,"idaNaiveBayes")) {
-    return(object$model) 
   } else {
     stop("Model type not supported")    
   }
@@ -45,13 +43,31 @@ idaRetrieveModel <- function(modelname) {
   model <- xx$table
   modelSchema <- xx$schema
   
-  if(idaExistTable(paste('"',modelSchema,'"."',model,'_CLUSTERS"',sep=""))) {
-    idaRetrieveKMeansModel(modelname)
-  } else if(idaExistTable(paste('"',modelSchema,'"."',model,'_ITEMS"',sep=""))) {
-    idaRetrieveRulesModel(modelname)
-  } else {
-    idaRetrieveNBModel(modelname) 
+  models <- idaListModels()
+  modelAlgorithm <- models$ALGORITHM[model == models$MODELNAME &
+                                     modelSchema == models$MODELSCHEMA]
+  if(length(modelAlgorithm)==0){
+    stop("The model you are trying to retrieve does not exist.")
   }
+  #THE NAME OF THE RETRIEVEMODEL FUNCTION HAS TO BE AT THE SAME INDEX AS THE NAME OF THE
+  #RESPECTIVE ALGORITHM...
+  retrievemethods <- c("idaRetrieveKMeansModel", "idaRetrieveRulesModel", "idaRetrieveNBModel",
+                     "idaRetrieveSeqRulesModel", "idaRetrieveidaLmModel", "idaRetrieveTreeModel",
+                     "idaRetrieveTreeModel")
+  
+  algorithms <- c("Kmeans", "Association Rules", "Naive Bayes", "Sequential Patterns",
+                "Linear Regression", "Regression Tree", "Decision Tree")
+  
+ 
+    algNr <- match(modelAlgorithm, algorithms)
+    if(is.na(algNr)){stop(paste("The algorithm", modelAlgorithm, "is not supported by ibmdbR."))}
+    tryCatch(
+    model <- get(retrievemethods[algNr])(modelname),
+    error = function(e){
+             stop(e)
+           }
+  )
+  return(model)
 }
 
 idaModelExists <- function(modelname) {

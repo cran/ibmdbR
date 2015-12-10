@@ -19,7 +19,7 @@
 \alias{idaDropModel}
 \title{Drop a predictive model from the database}
 \description{
-Use this function to drop from the database a model that was created using the \code{\link{idaNaiveBayes}} 
+Use this function to drop from the database a model that was created using the \code{\link{idaNaiveBayes}}, \code{\link{idaLm}}, \code{\link{idaTree}}, \code{\link{idaArule}}
 or \code{\link{idaKMeans}} function.
 }
 
@@ -36,7 +36,7 @@ idaDropModel(modelname)
 \examples{
 \dontrun{
 
-#Drop the model with the name MYTREEMODEL
+#Drop the model with the name KMEANSMODEL
 idaDropModel("KMEANSMODEL");
 }
 }

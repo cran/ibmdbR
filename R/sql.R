@@ -19,15 +19,19 @@
 utils::globalVariables(c("idaRGlobal"))
 
 ################ show tables ############################
-idaShowTables <- function(showAll=FALSE) {
+idaShowTables <- function(showAll=FALSE, matchStr=NULL) {
   idaCheckConnection();
-  
+  if (!is.null(matchStr) && !is.character(matchStr))
+    stop("This function can only be applied to character values.")
+    
   wherePart <- "WHERE (OWNERTYPE = 'U')";
   if(!showAll) {
     currSchema <- idaGetCurrentSchema();	
     wherePart <- paste(wherePart," AND (TABSCHEMA= '",currSchema,"') ",sep='');
-  } else {
   }
+  
+  if (!is.null(matchStr))
+    wherePart <- paste(wherePart," AND TABNAME LIKE '%", paste(matchStr,collapse='%',sep=''), "%'", sep='')
   
   idaQuery('SELECT distinct TABSCHEMA as "Schema", TABNAME as "Name", OWNER as "Owner", TYPE as "Type" from SYSCAT.TABLES ', wherePart ,'ORDER BY "Schema","Name"')
 }
@@ -130,7 +134,6 @@ idaDeleteViewOrTable <- function(tableName) {
   } else {
     idaDeleteTable(tableName);
   }
-  
 }
 
 idaDeleteTable <- function(table) {
@@ -148,7 +151,70 @@ idaDropView <- function(v) {
   try({idaQuery("DROP VIEW ", v)});
 }
 
-idaQuery <- function (..., as.is = TRUE)  {
+idaDeleteTempTables <- function() {
+  idaCheckConnection();
+  tempTables <- idaShowTables()
+  tempTables <- tempTables[grep('DATA_FRAME_[0-9]+', tempTables$Name),]
+  if (nrow(tempTables)==0) {
+    cat("No temporary tables or views are found to be deleted.")
+    return(invisible(NULL))
+  }
+  row.names(tempTables) <- 1:nrow(tempTables)
+  cat("The temporary tables and views to be deleted are following:\n")
+  print(tempTables)
+  cat("\nHow do you like to delete the temporary tables and views?\n")
+  cat("1) Delete all temporary tables and views without further confirmation.\n")
+  cat("2) Ask conformation for deleting each temporary table or view.\n")
+  cat("3) Cancel deletion and return.\n\n")
+  while(TRUE){
+    cat("Type a key to select your choice:\n")
+    cat(" 1) 'a'       2) 'b'       3) 'c'\n")
+    choice <- readline()
+    if (choice=='a' || choice=='b' || choice=='c' )
+      break
+  }
+  if (choice=='a') {
+    for (i in 1:nrow(tempTables)) {
+      tempTab = tempTables[i,]
+      idaDeleteViewOrTable(paste('"', sub('\\s+$', '', tempTab$Schema), '"."', tempTab$Name, '"', sep=''))
+    } 
+  }
+  else if (choice=='b') {
+    for (i in 1:nrow(tempTables)) {
+      tempTab <- tempTables[i,]
+      schema <- sub('\\s+$', '', tempTab$Schema)
+      cat("Delete ", ifelse(tempTab$Type=='T', 'table', 'view'), ": ", 
+          schema, '.', tempTab$Name, "? yes[y], no[n] or exit[e] :", sep='')
+      choice <- readline()
+      if (choice=='e') {
+        break
+      }
+      else if (choice=='y') {
+        idaDeleteViewOrTable(paste('"', schema, '"."', tempTab$Name, '"', sep=''))
+      }
+    } 
+  }
+}
+
+idaMaterialize <- function(idf,tableName) {
+  
+  v <- idaCreateView(idf)
+   
+  tryCatch({
+        
+        odbcSetAutoCommit(get("p_idaConnection",envir=idaRGlobal), autoCommit = FALSE)
+        idaQuery("CREATE TABLE ", tableName, " LIKE ",v," NOT LOGGED INITIALLY");
+        idaQuery("INSERT INTO ", tableName, " SELECT * FROM ",v);
+        
+        odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = TRUE);
+        
+      },
+      error=function(e){print(e);odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = FALSE)},
+      finally={odbcSetAutoCommit(get("p_idaConnection",envir=idaRGlobal), autoCommit = TRUE);idaDropView(v)}
+  );
+}
+
+idaQuery <- function (..., as.is = TRUE, na.strings = "NA")  {
   
   idaCheckConnection();
   
@@ -158,8 +224,8 @@ idaQuery <- function (..., as.is = TRUE)  {
     print(query)
   }
   
-  result <- sqlQuery(get("p_idaConnection",envir=idaRGlobal), query, believeNRows = FALSE, 
-      stringsAsFactors = FALSE, as.is = as.is)
+  result <- sqlQuery(get("p_idaConnection", envir=idaRGlobal), query, believeNRows = FALSE, 
+      stringsAsFactors = FALSE, as.is = as.is, na.strings = na.strings)
   
   #we got an error message
   if (is.character(result) && length(result) > 0) {
@@ -241,5 +307,59 @@ idaTableDef <- function(bdf,  collapse=TRUE) {
     res <- data.frame(name=attrs[idx,1], type=attrs[idx,2])
     res$valType <- ifelse(res$type %in% c('VARCHAR','CHARACTER','VARGRAPHIC','GRAPHIC','CLOB'),'CATEGORICAL',ifelse(res$type %in% c('SMALLINT', 'INTEGER','BIGINT','REAL','DOUBLE','FLOAT','DECIMAL','NUMERIC'),'NUMERIC','NONE'))
     return(res)
+  }
+}
+
+idaMaterialize <- function(idf,tableName) {
+  
+  v <- idaCreateView(idf)
+  
+  
+  tryCatch({
+        
+        odbcSetAutoCommit(get("p_idaConnection",envir=idaRGlobal), autoCommit = FALSE)
+        idaQuery("CREATE TABLE ", tableName, " LIKE ",v," ORGANIZE BY ROW NOT LOGGED INITIALLY");
+        idaQuery("INSERT INTO ", tableName, " SELECT * FROM ",v);
+        
+        odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = TRUE);
+        
+      },
+      error=function(e){print(e);odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = FALSE)},
+      finally={odbcSetAutoCommit(get("p_idaConnection",envir=idaRGlobal), autoCommit = TRUE);idaDropView(v)}
+  );
+}
+
+idaAppend <- function(df, table) {
+  sqlSave(get("p_idaConnection",envir=idaRGlobal), dat=df, tablename = table, rownames=F,append=T);
+}
+
+##############################  Utilities ############################
+
+removeQuotes <- function(x) {
+  if (!is.character(x) || length(x)>1)
+    stop("This function can only be applied on a character value")
+  if (nchar(x) > 2 && substr(x, 1, 1) == '"' && substr(x, nchar(x), nchar(x)) == '"') {
+    x <- substr(x, 2, nchar(x)-1)
+    return(x)
+  }
+  else
+  	return (x)
+}
+
+colName <- function(colDef) {
+  if (!inherits(colDef, 'ida.col.def'))
+    stop("This function can only be applied on ida.col.def object")
+  
+  term = removeQuotes(colDef@term)
+  tab <- colDef@table
+  if (term %in% tab@cols)
+    return(term)
+    
+  defCols <- tab@colDefs
+  if (is.null(defCols) || length(defCols)==0)
+    return(NULL)
+  for (colName in names(defCols)) {
+    if (term == defCols[[colName]])
+      return(colName)
   }
 }
