@@ -49,7 +49,7 @@
 \code{ida.data.frame} objects provide many methods that will behave exactly like or very
 similar to methods defined on a regular \code{data.frame}. The following is a list of
 currently supported methods: as.data.frame, sd, max, mean, min, length, print, names, colnames,
-summary, NROW, NCOL, dim, var, head, hist, cor, cov. Furthermore, the $ and [ operators allow you
+summary, NROW, NCOL, dim, var, head, hist, cor, cov. Furthermore, the $ and [] operators allow you
 to select columns and rows and the $<- operator will allow you to add columns. For details see
 the documentation of \code{\link{ida.data.frame}}.
 

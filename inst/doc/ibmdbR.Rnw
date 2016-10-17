@@ -53,8 +53,8 @@ increase efficiency.
 \section*{Prerequisites}
 
 The ibmdbR package is designed to work with IBM DB2©
-for Linux and Windows Version 10.5 (in the following abbreviated to DB2), 
-as well as IBM dashDB© (in the following dashDB).
+for Linux and Windows Version 10.5 (in the following abbreviated to DB2), IBM dashDB© (in the following dashDB)
+as well as DB2 z/OS (C) in conjunction with IBM DB2 Analytics Accelerator (C) (in the following DB2 z/OS).
 Before you start, you must install DB2 or provision an instance
 of dashDB (see \hyperref[further_reading]{,,Further Reading``}). 
 

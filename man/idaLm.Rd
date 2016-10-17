@@ -25,7 +25,7 @@
 \description{ This function performs linear regression on the contents of an \code{\link{ida.data.frame}}. }
 \usage{
 
-idaLm(form, idadf, modelname = NULL, dropModel = TRUE, limit = 25)
+idaLm(form, idadf, id = "id", modelname = NULL, dropModel = TRUE, limit = 25)
 
 \method{print}{idaLm}(x, ...)
 \method{predict}{idaLm}(object, newdata, id, outtable = NULL, ...)
@@ -39,21 +39,21 @@ lmgON = FALSE, backwardON = FALSE, ...)
 	The specified columns can contain continuous or categorical values. 
 	The specified formula cannot contain transformations.}
     \item{idadf}{An ida.data.frame that contains the input data for the function.}
+	\item{id}{The name of the column that contains a unique ID for each row of the input data.}
     \item{modelname}{Name of the model that will be created in the database.}
  %   \item{storeCovMat}{logical: Indicates whether the covariance Matrix shall be stored in a Table and in the R object.}
     \item{dropModel}{logical: If TRUE the in database model will be dropped after the calculation.}
  %   \item{clearExisting}{logical: If TRUE an existing model with the name modelname will be dropped and a new one will be created.}
-    \item{limit}{The maximum number of levels for a categorical column. Is set constant to 25.
-                 Parameter only exists for consistency with older version of idaLm.}
+    \item{limit}{The maximum number of levels for a categorical column. Its default value is 25.
+                 This parameter only exists for consistency with older version of idaLm.}
   	\item{x}{An object of the class \code{idaLm}.}
-  	\item{object}{object of the class \code{idaLm}}
-  	\item{newdata}{an ida.data.frame that contains data that will be predicted.}
-  	\item{id}{the name of the id column in newdata}
-  	\item{outtable}{The name of the table the results will be written in.}
-  	\item{names}{\code{logical}: If set TRUE then the plot will contain the names of the attributes instead of numbers.}
+  	\item{object}{An object of the class \code{idaLm}}
+  	\item{newdata}{An ida.data.frame that contains data that will be predicted.}
+  	\item{outtable}{The name of the table where the results will be written in.}
+  	\item{names}{\code{logical}: If set to TRUE then the plot will contain the names of the attributes instead of numbers.}
     \item{max_forw}{\code{integer}: The maximum number of iterations the heuristic forward/backward will be calculated.}
     \item{max_plot}{\code{integer}: The maximum number of attributes that will appear in the plot. It must be bigger than 0.}
-	\item{order}{Vector of attribute names. Method will calculate the value of the models with the attributes in the order of the vector and plot the value for each of it.}
+	\item{order}{Vector of attribute names. The method will calculate the value of the models with the attributes in the order of the vector and plot the value for each of it.}
     \item{lmgON}{\code{logical}: If set TRUE the method will calculate the importance metric lmg. This method has exponential runningtime and is not supported for more than 15 attributes}
   	\item{backwardON}{\code{logical}: If set TRUE the method will calculate the backward heuristic. By default (FALSE) it will do the forward heuristic.}
   	\item{...}{Additional parameters.}
@@ -151,5 +151,8 @@ lm1 <- idaLm(SepalLength~., idf)
 
 library(ggplot2)
 plot(lm1)
+
+#Calculate linear model with more than 46 columns requires an id column
+lm1 <- idaLm(SepalLength~., idf, id="ID")
 }
 }

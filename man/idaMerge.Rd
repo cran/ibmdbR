@@ -52,7 +52,7 @@ idaMerge(x, y, by=intersect(x@cols, y@cols), by.x=by, by.y=by,
   In SQL database terminology, specifying \code{all.x=TRUE} and \code{all.y=FALSE} results in a left outer join, 
   and specifying \code{all.x=FALSE} and \code{all.y=TRUE} results in a right outer join. 
 
-  if \code{TRUE}, then extra rows are added to the
+  If \code{TRUE}, then extra rows are added to the
     output, one for each row in \code{x} that has no matching row in
 	\code{y}. These rows have a value of \code{NA} in those columns
 	that are typically filled with values from \code{y}. The default is
@@ -87,7 +87,7 @@ length zero vector or \code{NULL}), the result, \code{r}, is the
 Cartesian product of \code{x} and \code{y}, that is, a \emph{cross join}. 
 
 If non-merged columns of the data frames have identical names and are to be included in the output, 
-suffixes are appended to the names of the corresponding columns in the output to make their names. 
+suffixes are appended to the names of the corresponding columns in the output to make their names unique. 
 
 
 Note that this function creates, in the current database, a view that corresponds to the output object. 

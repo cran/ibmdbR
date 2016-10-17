@@ -15,7 +15,7 @@
 % along with this program. If not, see <http://www.gnu.org/licenses/>. 
 % 
 % 
-\name{idaDeleteTable, idaExistTable, idaGetValidTableName}
+\name{idaDeleteTable, idaExistTable, idaGetValidTableName, idaIsView}
 \alias{idaDeleteTable}
 \alias{idaExistTable}
 \alias{idaGetValidTableName}
@@ -35,7 +35,7 @@ idaIsView(tableName)
 idaGetValidTableName(prefix="DATA_FRAME_")
 }
 \arguments{
-  \item{table}{The name of a database table or a \code{ida.data.frame}.}
+  \item{table}{The name of a database table or an \code{ida.data.frame}.}
   \item{tableName}{The name of a database table.}
   \item{prefix}{Keyword used to specify the prefix of a table name.} 
 }

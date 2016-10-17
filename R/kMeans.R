@@ -49,7 +49,12 @@ idaKMeans <- function(
     }
     
     xx <- parseTableName(modelName);
-    model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
+	if (idaIsDb2z()) {
+		model <- paste('"',xx$table,'"',sep=''); 	
+	} else {
+		model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
+	}
+    
   }
   
   if (!is.null(outtable)&&idaExistTable(outtable)) {
@@ -58,8 +63,14 @@ idaKMeans <- function(
   
   tmpView <- idaCreateView(data)
   
+  tmpOuttable <- NULL
+  if(idaIsDb2z() && is.null(outtable)) {
+	tmpOuttable <- idaGetValidTableName(prefix = "IDAR_OUTTABLE_")
+	outtable <- tmpOuttable
+  }
+  
   tryCatch({	
-        res <- callSP("IDAX.KMEANS ",
+        res <- callSP("KMEANS",
             model=model,
             intable=tmpView,
             k=k,
@@ -76,6 +87,9 @@ idaKMeans <- function(
       }, finally = {
         # drop view
         idaDropView(tmpView)
+		if (!is.null(tmpOuttable)) {
+		   idaDeleteTable(tmpOuttable)
+		}
       }
   )
   
@@ -91,20 +105,56 @@ idaRetrieveKMeansModel <- function(modelName) {
   xx <- parseTableName(modelName);
   model <- xx$table
   modelSchema <- xx$schema
+  columnsColList <- "COLUMNNAME, DATATYPE, OPTYPE, USAGETYPE, COLUMNWEIGHT, AUTOTRANSFORM, TRANSFORMEDCOLUMN, COMPAREFUNCTION, IMPORTANCE, OUTLIERTREATMENT, LOWERLIMIT, UPPERLIMIT, CLOSURE, STATISTICSTYPE"
+  modelColList <- "MODELCLASS,COMPARISONTYPE, COMPARISONMEASURE, NUMCLUSTERS "
+  clustersColList <- "CLUSTERID, NAME, DESCRIPTION, SIZE, RELSIZE, WITHINSS"
+  columnStatsColList <- "CLUSTERID, COLUMNNAME, CARDINALITY, MODE, MINIMUM,  MAXIMUM, MEAN, VARIANCE, VALIDFREQ, MISSINGFREQ, INVALIDFREQ, IMPORTANCE"; 
   
-  model2 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_MODEL"',sep="")
-  modelMain <- idaQuery(model2)
-  k <- modelMain[1,4]
-  distance <- modelMain[1,3]	
+  if(idaIsDb2z()) {
+     
+	exportModelTable <- idaGetValidTableName(prefix = "IDAR_MODEL_TABLE_")
+    
+	tryCatch({	
+        res <- callSP("EXPORT_MODEL_TO_TABLE", model=modelName, outtable=exportModelTable)
+		model1 <- paste('SELECT ', columnsColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Columns\'',sep="")
+		columns <- idaQuery(model1)
   
-  # results are converted to kmeans object
-  model1 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMNS"',sep="")
-  columns <- idaQuery(model1)
+		model2 <- paste('SELECT ', modelColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Model\'',sep="")
+		modelMain <- idaQuery(model2)
+  
+		model3 <- paste('SELECT ', clustersColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Clusters\'',sep="")
+		kmOutStat <- idaQuery(model3)
+  
+		model4 <- paste('SELECT ', columnStatsColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Column Statistics\'',sep="")
+		kols <- idaQuery(model4)
+      }, error = function(e) {
+        # in case of error, let user know what happend
+        stop(e)
+      }, finally = {
+        idaDeleteTable(exportModelTable)
+      }
+	)
+	
+  } else {
+	model1 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMNS"',sep="")
+	columns <- idaQuery(model1)
+  
+	model2 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_MODEL"',sep="")
+	modelMain <- idaQuery(model2)
+  
+	model3 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_CLUSTERS"',sep="")
+	kmOutStat <- idaQuery(model3)
+  
+	model4 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMN_STATISTICS"',sep="")
+	kols <- idaQuery(model4)
+  }
+
+  
   contCols <- columns[columns$USAGETYPE=='active'&columns$OPTYPE=='continuous','COLUMNNAME']
   catCols <- columns[columns$USAGETYPE=='active'&columns$OPTYPE=='categorical','COLUMNNAME']
-  
-  model4 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMN_STATISTICS"',sep="")
-  kols <- idaQuery(model4)
+
+  k <- modelMain[1,4]
+  distance <- modelMain[1,3]	
   
   kols$CARDINALITY <- as.numeric(kols$CARDINALITY)
   kols$VALIDFREQ <- as.numeric(kols$VALIDFREQ)
@@ -126,9 +176,6 @@ idaRetrieveKMeansModel <- function(modelName) {
       cents[catCols[i]]<-kols[kols$COLUMNNAME==catCols[i],4]
     }
   
-  model3 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_CLUSTERS"',sep="")
-  
-  kmOutStat <- idaQuery(model3)
   kmOutStat <- kmOutStat[order(kmOutStat[,1]),]
   
   cluster <- NULL;
@@ -179,7 +226,7 @@ predict.idaKMeans <- function(object, newdata, id,...) {
   tmpView <- idaCreateView(newData)
   
   tryCatch({	
-        callSP("IDAX.PREDICT_KMEANS ",
+        callSP("PREDICT_KMEANS",
             model=object$model,
             intable=tmpView,
             id=id,

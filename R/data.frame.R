@@ -107,7 +107,7 @@ setMethod("as.data.frame", signature(x="ida.data.frame"),
 )
 
 # ---------------------------------------------------------------------
-as.ida.data.frame <- function (x, table = NULL, clear.existing=FALSE, case.sensitive=TRUE) {
+as.ida.data.frame <- function (x, table = NULL, clear.existing=FALSE, case.sensitive=TRUE,  rownames=NULL, dbname=NULL, asAOT=FALSE) {
   
       if(!is.null(table)) {
         
@@ -134,8 +134,22 @@ as.ida.data.frame <- function (x, table = NULL, clear.existing=FALSE, case.sensi
         names(x) <- toupper(names(x));
       }
       
-      sqlSave(get("p_idaConnection",envir=idaRGlobal), dat=x, tablename = table, rownames=F,fast=ifelse(idaIsOracleMode(),F,T));
-      return(ida.data.frame(as.character(table)));		
+	  if (idaIsDb2z()) {
+		rowName = ""
+		if (!is.null(rownames)) {
+			rowName = rownames
+		}
+		if(is.null(dbname)) {
+        	dbname <- ""
+      	} 
+      
+		db2zSave(get("p_idaConnection",envir=idaRGlobal), x, tblName = table, rowName=rowName, dbname=dbname, asAOT=asAOT)
+	  } else {
+		sqlSave(get("p_idaConnection",envir=idaRGlobal), dat=x, tablename = table, rownames=rownames,fast=ifelse(idaIsOracleMode(),F,T));
+	  }
+	  resDf <- ida.data.frame(as.character(table))
+	  
+      return(resDf);		
     }
 
 
@@ -323,7 +337,7 @@ setMethod("show", signature(object="ida.data.frame"),
     }
 )
 
-idaCreateView <- function (x) {
+idaCreateView <- function (x, newColumn = NULL) {
   
   idaCheckConnection();
   
@@ -331,6 +345,10 @@ idaCreateView <- function (x) {
     stop("idaCreateView is valid only for ida.data.frame objects")
   
   name <- idaGetValidTableName("idar_view_")
-  idaQuery("CREATE VIEW ", name, " AS ", idadf.query(x))
+  if(is.null(newColumn) || newColumn == '') {
+	idaQuery("CREATE VIEW ", name, " AS ", idadf.query(x))
+  } else {  
+	idaQuery("CREATE VIEW ", name, " AS SELECT ", newColumn, ", t.* FROM( ", idadf.query(x), ") as t")
+  }
   return(name)
 }

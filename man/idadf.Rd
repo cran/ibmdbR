@@ -22,7 +22,7 @@
 
 \title{Query, store and update data in the database.}
 \description{
-These functions allows to query, store and update data in the database.
+These functions allow to query, store and update data in the database.
 Usually, it is easier to use \code{\link{idaQuery}},\code{\link{ida.data.frame}}
 and \code{\link{as.ida.data.frame}} instead of these methods. 
 

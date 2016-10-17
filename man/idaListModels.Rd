@@ -20,8 +20,8 @@
 \alias{idaModelExists}
 \title{List all predictive models in the database}
 \description{
-Use these function to list all models in the schema of the current user that were created using the \code{\link{idaNaiveBayes}} 
-or \code{\link{idaKMeans}} functions or check whether a model with a specific name exists.
+Use these function to list all models in the schema of the current user that were created using the functions like \code{\link{idaNaiveBayes}} 
+or \code{\link{idaKMeans}} or check whether a model with a specific name exists.
 }
 
 \usage{

@@ -24,7 +24,11 @@ ida.list <- function (type='public',user=NULL) {
   privateTablePrefix <- "R_OBJECTS_PRIVATE";
   
   #Get current user
-  currentUser <- idaScalarQuery("select trim(current_user) from sysibm.sysdummy1");
+  if (idaIsDb2z()) {
+	currentUser <- idaScalarQuery("select trim(session_user) from sysibm.sysdummy1");
+  } else {
+	currentUser <- idaScalarQuery("select trim(current_user) from sysibm.sysdummy1");
+  }
   roleName <- idaCheckSharing()
   if(is.null(roleName)&&(type=='public')) {
     warning('Sharing R objects is not supported on this platform, creating private list instead')

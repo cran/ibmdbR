@@ -41,7 +41,7 @@ idaKMeans(
 }
 
 \arguments{
-	\item{data}{A IDA data frame that contains the input data for the function. The input IDA data frame 
+	\item{data}{An IDA data frame that contains the input data for the function. The input IDA data frame 
 	must include a column that contains a unique ID for each row.}
 	\item{id}{The name of the column that contains a unique ID for each row of the input data.}
 	\item{k}{The number of clusters to be calculated.} 
@@ -56,7 +56,7 @@ idaKMeans(
 	\item{statistics}{Denotes which statistics to calculate. Allowed values are \code{"none"},\code{"columns"} and \code{"all"}. If NULL, the default of the database system will be used.}
 	\item{modelname}{The name under which the model is stored in the database.
 	This is the name that is specified when using functions such as \code{\link{idaRetrieveModel}} or \code{\link{idaDropModel}}.}
-	\item{object}{An object of the class \code{idaKMeans} to be predicted.} 
+	\item{object}{An object of the class \code{idaKMeans} to be used for prediction, i.e. for applying it to new data.} 
 	\item{x}{An object of the class \code{idaKMeans} to be printed.} 
 	\item{newdata}{A IDA data frame that contains the data to which to apply the model.} 
 	\item{...}{Additional parameters to pass to the print or predict method.} 

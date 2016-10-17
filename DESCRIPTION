@@ -1,18 +1,19 @@
 Package: ibmdbR
-Version: 1.47.1
+Version: 1.48.0
 Title: IBM in-Database Analytics for R
 Author: IBM Corporation
-Maintainer: Michael Wurst <inza@de.ibm.com>
+Maintainer: Alexander Eckert <inza@de.ibm.com>
 Depends: R (>= 2.15.1), methods, RODBC, Matrix, arules
-Imports: MASS,rpart, rpart.plot, ggplot2
+Imports: MASS, rpart, rpart.plot, ggplot2
 Description: Functionality required to efficiently use R with
-        IBM DB2(C) for Linux, Unix and Windows as well as IBM dashDB(C).
-        Many basic and complex R operations are pushed down into the database, which removes
-        the main memory boundary of R and allows to make full use of parallel processing in
-        the underlying database. 
+        IBM DB2(C) for Linux, Unix and Windows, IBM dashDB(C) as well as 
+        DB2 for z/OS (C) in conjunction with IBM DB2 Analytics Accelerator (C).
+        Many basic and complex R operations are pushed down into the database, 
+        which removes the main memory boundary of R and allows to make full 
+        use of parallel processing in the underlying database. 
 License: GPL-3
 LazyLoad: Yes
 NeedsCompilation: no
-Packaged: 2015-12-10 10:48:18 UTC; mwurst
 Repository: CRAN
-Date/Publication: 2015-12-10 23:20:24
+Date/Publication: 2016-10-17 00:47:42
+Packaged: 2016-10-16 13:45:40 UTC; root

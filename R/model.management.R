@@ -17,14 +17,39 @@
 # 
 
 idaListModels <- function() {
-  idaQuery("call idax.list_models()")
+   if(idaIsDb2z()) {
+    # accelerator  <- idaGetAccelerator(); 
+ 	# res <- idaQuery( "call inza.list_models('", accelerator, "', '', '', '')" )
+	tryCatch({	
+        res <- callSP('LIST_MODELS')
+		idaDataFrameFromResultStr(paste(res$TABLES_DETAILS, " ", sep=""))
+      }, error = function(e) {
+        # in case of error, let user know what happend
+        stop(e)
+      }
+    )
+   } else {
+    idaQuery("call idax.list_models()")
+   }
 }
 
 idaDropModel <- function(modelname) {
-  xx <- parseTableName(modelname);
-  model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
+  xx <- parseTableName(modelname)
   
-  idaQuery("CALL IDAX.DROP_MODEL('model=",model,"')")
+  if(idaIsDb2z()) {
+    model <- paste('"',xx$table,'"',sep='')	
+    tryCatch({	
+        res <- callSP('DROP_MODEL', model=model)
+		return(res)		
+      }, error = function(e) {
+        # in case of error, let user know what happend
+        stop(e)
+      }
+    )
+  } else {
+	model <- paste('"',xx$schema,'"."',xx$table,'"',sep='') 	
+	idaQuery("CALL IDAX.DROP_MODEL('model=",model,"')")
+  }	
 }
 
 idaGetModelname <- function(object) {
@@ -44,20 +69,34 @@ idaRetrieveModel <- function(modelname) {
   modelSchema <- xx$schema
   
   models <- idaListModels()
-  modelAlgorithm <- models$ALGORITHM[model == models$MODELNAME &
-                                     modelSchema == models$MODELSCHEMA]
-  if(length(modelAlgorithm)==0){
+  if(idaIsDb2z()) {
+	# ListModels does not include the MODELSCHEMA column for DB2 s/OS
+	modelAlgorithm <- models$ALGORITHM[model == models$MODELNAME]
+	#THE NAME OF THE RETRIEVEMODEL FUNCTION HAS TO BE AT THE SAME INDEX AS THE NAME OF THE
+    #RESPECTIVE ALGORITHM...
+	retrievemethods <- c("idaRetrieveKMeansModel", "idaRetrieveTwoStepModel", "idaRetrieveNBModel",
+						 "idaRetrieveTreeModel","idaRetrieveTreeModel", "idaRetrieveRulesModel",
+						 "idaRetrieveidaLmModel", "idaRetrieveGlmModel",  "idaRetrieveDivClusterModel")
+  
+	algorithms <- c("KMeans", "twostep", "Naive Bayes","Regression Tree", "Decision Tree", "FPGrowth",
+					"Linear Regression", "GLM", "Divisive")
+  
+  } else {
+	modelAlgorithm <- models$ALGORITHM[model == models$MODELNAME &
+										modelSchema == models$MODELSCHEMA]		
+	#THE NAME OF THE RETRIEVEMODEL FUNCTION HAS TO BE AT THE SAME INDEX AS THE NAME OF THE
+    #RESPECTIVE ALGORITHM...									
+	retrievemethods <- c("idaRetrieveKMeansModel", "idaRetrieveRulesModel", "idaRetrieveNBModel",
+						"idaRetrieveSeqRulesModel", "idaRetrieveidaLmModel", "idaRetrieveTreeModel",
+						"idaRetrieveTreeModel")
+  
+	algorithms <- c("Kmeans", "Association Rules", "Naive Bayes", "Sequential Patterns",
+					"Linear Regression", "Regression Tree", "Decision Tree")
+  										
+   }									 
+   if(length(modelAlgorithm)==0){
     stop("The model you are trying to retrieve does not exist.")
-  }
-  #THE NAME OF THE RETRIEVEMODEL FUNCTION HAS TO BE AT THE SAME INDEX AS THE NAME OF THE
-  #RESPECTIVE ALGORITHM...
-  retrievemethods <- c("idaRetrieveKMeansModel", "idaRetrieveRulesModel", "idaRetrieveNBModel",
-                     "idaRetrieveSeqRulesModel", "idaRetrieveidaLmModel", "idaRetrieveTreeModel",
-                     "idaRetrieveTreeModel")
-  
-  algorithms <- c("Kmeans", "Association Rules", "Naive Bayes", "Sequential Patterns",
-                "Linear Regression", "Regression Tree", "Decision Tree")
-  
+   } 
  
     algNr <- match(modelAlgorithm, algorithms)
     if(is.na(algNr)){stop(paste("The algorithm", modelAlgorithm, "is not supported by ibmdbR."))}
@@ -73,7 +112,12 @@ idaRetrieveModel <- function(modelname) {
 idaModelExists <- function(modelname) {
   xx <- parseTableName(modelname);
   models <- idaListModels()
-  return(nrow(models[(models$MODELNAME==xx$table)&(models$MODELSCHEMA==xx$schema),])>0)
+  if(idaIsDb2z()) {
+	# ListModels does not include the MODELSCHEMA column for DB2 s/OS
+	return(nrow(models[(models$MODELNAME==xx$table),])>0)
+  } else {
+    return(nrow(models[(models$MODELNAME==xx$table)&(models$MODELSCHEMA==xx$schema),])>0)
+  }	
 }
 
 idaGetValidModelName <- function(prefix) {

@@ -20,7 +20,7 @@
 \title{Get the name of a model}
 \description{
 Use this function to get the name under which a model is stored in-database. This function can be applied to objects returned by
-the \code{\link{idaNaiveBayes}}, \code{\link{idaKMeans}} or \code{\link{idaArule}} functions.
+functions like \code{\link{idaNaiveBayes}}, \code{\link{idaKMeans}} or \code{\link{idaArule}}.
 }
 
 \usage{

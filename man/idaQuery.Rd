@@ -52,12 +52,12 @@ and the result is passed to the database.
 v <- idaScalarQuery("SELECT COUNT(*) FROM IRIS")
 
 #idaQuery returns a data.frame
-df <- idaScalarQuery("SELECT * FROM IRIS")
+df <- idaQuery("SELECT * FROM IRIS")
 
 #idaQuery and idaScalarQuery automatically paste all arguments into a single query
 #This is convenient if you use variables
 
 tableName <- "IRIS"
-df <- idaQuery("SELECT COUNT(*) FROM ",tableName)
+df <- idaScalarQuery("SELECT COUNT(*) FROM ",tableName)
 }
 }

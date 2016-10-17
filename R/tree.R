@@ -52,7 +52,11 @@ idaTree <- function(form, data, id, minsplit=50, maxdepth=10, qmeasure=NULL,
     }
     
     xx <- parseTableName(modelName);
-    model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
+   	if (idaIsDb2z()) {
+		model <- paste('"',xx$table,'"',sep=''); 	
+	} else {
+		model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
+	}
   }
   
   # check if given id is valid
@@ -72,15 +76,15 @@ idaTree <- function(form, data, id, minsplit=50, maxdepth=10, qmeasure=NULL,
           valview <- idaCreateView(valtable)
         }
         
-        if(isReg) {
+		if(isReg) {
           
-          callSP("IDAX.REGTREE ", model = model, intable = tmpView, id = id, target = varY, 
+          callSP("REGTREE", model = model, intable = tmpView, id = id, target = varY, 
               minsplit = minsplit, maxdepth = maxdepth, qmeasure = qmeasure, 
               valtable = valview, minimprove = minimprove, eval = eval)
           
         } else {
           
-          callSP("IDAX.DECTREE ", model = model, intable = tmpView, id = id, target = varY, 
+          callSP("DECTREE", model = model, intable = tmpView, id = id, target = varY, 
               minsplit = minsplit, maxdepth = maxdepth, qmeasure = qmeasure, 
               valtable = valview, minimprove = minimprove, eval = eval)
         }					
@@ -104,34 +108,81 @@ idaTree <- function(form, data, id, minsplit=50, maxdepth=10, qmeasure=NULL,
 
 idaRetrieveTreeModel <- function(modelName) {
   
-  xx <- parseTableName(modelName);
+  xx <- parseTableName(modelName)
   model <- xx$table
   modelSchema <- xx$schema
+  columnsColList = "COLUMNNAME, DATATYPE, OPTYPE, USAGETYPE, COLUMNWEIGHT, IMPORTANCE, OUTLIERTREATMENT, LOWERLIMIT, UPPERLIMIT, CLOSURE "
+  modelColList <- "MODELCLASS, MAXSPLIT, DEPTH, MISSINGVALUESTRATEGY, MISSINGVALUEPENALTY, NUMLEAVES, NUMNODES "
+  nodesColList <- "NODEID, NAME, DESCRIPTION, SIZE, RELSIZE, ISLEAF, PARENT, CLASS, IMPURITY, DEFAULTCHILD "
+  predicatesColList = "NODEID, COLUMNNAME, OPERATOR, VALUE "; 
+  discrStatsColList <- "NODEID, COLUMNNAME, VALUE, COUNT, RELFREQUENCY, DEVIATION "
   
-  modelTable <- paste('SELECT * FROM "',modelSchema,'"."',model,'_MODEL"',sep="")
+  if(idaIsDb2z()) {
+     
+	exportModelTable <- idaGetValidTableName(prefix = "IDAR_MODEL_TABLE_")
+    
+	tryCatch({	
+        res <- callSP("EXPORT_MODEL_TO_TABLE",
+						model=modelName,
+						outtable=exportModelTable)
+						
+		modelTable <- paste("SELECT ", modelColList, " FROM ", exportModelTable, " WHERE MODELUSAGE = 'Model'",sep="")
+		modelMain <- idaQuery(modelTable)
   
-  modelMain <- idaQuery(modelTable)
+		isReg <- modelMain[1,1]=='regression'
+		modelStr <- paste("SELECT ", nodesColList, " FROM ", exportModelTable, " WHERE MODELUSAGE = 'Nodes'",sep="")
+		nodes <- idaQuery(modelStr)
+		nodes$NODEID <- as.numeric(nodes$NODEID);
+		nodes$PARENT <- as.numeric(nodes$PARENT);
+		nodes$DEFAULTCHILD <- as.numeric(nodes$DEFAULTCHILD);
   
-  isReg <- modelMain[1,1]=='regression'
+		modelStr <- paste("SELECT ", predicatesColList, " FROM ", exportModelTable, " WHERE MODELUSAGE = 'Predicates'",sep="")
+		predicates <- idaQuery(modelStr)
+		predicates$NODEID <- as.numeric(predicates$NODEID)
   
-  modelStr <- paste('SELECT * FROM "',modelSchema,'"."',model,'_NODES"',sep="")
-  nodes <- idaQuery(modelStr)
-  nodes$NODEID <- as.numeric(nodes$NODEID);
-  nodes$PARENT <- as.numeric(nodes$PARENT);
-  nodes$DEFAULTCHILD <- as.numeric(nodes$DEFAULTCHILD);
+		modelStr <- paste("SELECT ", columnsColList, " FROM ", exportModelTable, " WHERE MODELUSAGE = 'Columns'",sep="")
+		columns <- idaQuery(modelStr)
   
-  modelStr <- paste('SELECT * FROM "',modelSchema,'"."',model,'_PREDICATES"',sep="")
-  predicates <- idaQuery(modelStr)
-  predicates$NODEID <- as.numeric(predicates$NODEID)
+		if(!isReg) {
+			modelStr <- paste("SELECT ", discrStatsColList, " FROM ", exportModelTable, " WHERE MODELUSAGE = 'Discrete Statistics'",sep="")
+			discrete <- idaQuery(modelStr)
+			discrete$NODEID <- as.numeric(discrete$NODEID)	
+			discrete <- discrete[order(discrete[,"NODEID"]),]
+		}				
+      }, error = function(e) {
+        # in case of error, let user know what happend
+        stop(e)
+      }, finally = {
+        idaDeleteTable(exportModelTable)
+      }
+	)
   
-  modelStr <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMNS"',sep="")
-  columns <- idaQuery(modelStr)
+  } else {
+    modelTable <- paste('SELECT * FROM "',modelSchema,'"."',model,'_MODEL"',sep="")
   
-  if(!isReg) {
-    modelStr <- paste('SELECT * FROM "',modelSchema,'"."',model,'_DISCRETE_STATISTICS"',sep="")
-    discrete <- idaQuery(modelStr)
-    discrete$NODEID <- as.numeric(discrete$NODEID)	
-    discrete <- discrete[order(discrete[,"NODEID"]),]
+	modelMain <- idaQuery(modelTable)
+  
+	isReg <- modelMain[1,1]=='regression'
+  
+	modelStr <- paste('SELECT * FROM "',modelSchema,'"."',model,'_NODES"',sep="")
+	nodes <- idaQuery(modelStr)
+	nodes$NODEID <- as.numeric(nodes$NODEID);
+	nodes$PARENT <- as.numeric(nodes$PARENT);
+	nodes$DEFAULTCHILD <- as.numeric(nodes$DEFAULTCHILD);
+  
+	modelStr <- paste('SELECT * FROM "',modelSchema,'"."',model,'_PREDICATES"',sep="")
+	predicates <- idaQuery(modelStr)
+	predicates$NODEID <- as.numeric(predicates$NODEID)
+  
+	modelStr <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMNS"',sep="")
+	columns <- idaQuery(modelStr)
+  
+	if(!isReg) {
+		modelStr <- paste('SELECT * FROM "',modelSchema,'"."',model,'_DISCRETE_STATISTICS"',sep="")
+		discrete <- idaQuery(modelStr)
+		discrete$NODEID <- as.numeric(discrete$NODEID)	
+		discrete <- discrete[order(discrete[,"NODEID"]),]
+	}
   }
   
   # sort data by NODEID (no need to sort columns)
@@ -310,7 +361,6 @@ idaRetrieveTreeModel <- function(modelName) {
     dummy.csplit <- dummy.csplit[order(score[discretes]),]
   }
   
-  
   # add rpart functions print, summary, text to tree
   if(isReg) {
     dummy <- rpart(X~Y,data=data.frame(X=1,Y=1))$functions
@@ -354,7 +404,7 @@ idaRetrieveTreeModel <- function(modelName) {
 }
 
 plot.idaTree <- function(x, ...) {
-  
+
   if(x$method=='class') {
     prp(x, type = 2, extra = 104, nn = TRUE, varlen = 0, faclen = 0, shadow.col = "grey", fallen.leaves = TRUE, branch.lty = 3,...)
   } else {
@@ -377,15 +427,15 @@ predict.idaTree <- function(object, newdata, id,...) {
   
   tryCatch({	
         
-        if(object$method=='class') {	
-          callSP("IDAX.PREDICT_DECTREE ",
+		if(object$method=='class') {	
+          callSP( "PREDICT_DECTREE",
               model=object$model,
               intable=tmpView,
               id=id,
               outtable=outtable,
               ...)
         } else {
-          callSP("IDAX.PREDICT_REGTREE ",
+          callSP("PREDICT_REGTREE",
               model=object$model,
               intable=tmpView,
               id=id,

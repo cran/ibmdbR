@@ -37,23 +37,27 @@ idaArule(
 		modelname=NULL
 )
 
-idaApplyRules(modelname, newdata, tid, item)
+idaApplyRules(modelname, newdata, tid, item, nametable=NULL, namecol=NULL, ...)
 
 }
 
 \arguments{
-	\item{data}{A \code{ida.data.frame} object pointing to the data to be mined.}
+	\item{data}{An \code{ida.data.frame} object pointing to the data to be mined.}
 	\item{tid}{Input table column that identifies the transactions by an id.}
 	\item{item}{Input table column that identifies items in transactions.}
 	\item{maxlen}{The maximum length of a rule. Must be two or larger.}
 	\item{maxheadlen}{The maximum length of the rule head.}
 	\item{minsupport}{The minimal support of a rule to be considered.}
 	\item{minconf}{The minimal confidence of a rule to be considered.}
-	\item{nametable}{A database table containing a mapping between the items in the input table and their name. The table must contain at least two columns, the first column is named as the column indicated in the item parameter and the second column is named as indicated in parameter namecol.}
+	\item{nametable}{A database table containing a mapping between the items in the input table and their name. 
+	                 The table must contain at least two columns, the first column is named as the column indicated in the item parameter 
+	                 and the second column is named as indicated in parameter namecol.}
 	\item{namecol}{The name of the column containing the item name in case \code{nametable} was specified.}
 	\item{modelname}{The name of the model in-database. If NULL, it is automatically generated.}
 	\item{newdata}{A table to which to apply the rules.}
+	\item{...}{Additional stored procedure parameters.}
 }
+
 
 \details{
 \code{idaArule} finds association rules in transactional data. The input data must be in transactional format, thus each

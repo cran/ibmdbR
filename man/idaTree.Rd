@@ -22,22 +22,12 @@
 \alias{plot.idaTree}
 \alias{predict.idaTree}
 \title{Decision and Regression tree}
-\description{This function generates a tree model based on the contents of a IDA data frame (\code{\link{ida.data.frame}}).
+\description{This function generates a tree model based on the contents of an IDA data frame (\code{\link{ida.data.frame}}).
 }
 
 \usage{
-idaTree(
-	form,
-	data,
-	id,
-	minsplit=50,
-	maxdepth=10,
-	qmeasure=NULL,
-	minimprove=0.01,
-	eval=NULL,
-	valtable=NULL,
-	modelname=NULL
-)
+idaTree( form, data, id, minsplit=50, maxdepth=10, qmeasure=NULL,
+         minimprove=0.01, eval=NULL, valtable=NULL, modelname=NULL)
 
 %\method{print}{idaTree}(object) 
 \method{plot}{idaTree}(x,...)  
@@ -48,7 +38,7 @@ idaTree(
 	\item{form}{A \code{formula} object that specifies both the name of the column that contains the categorical 
 	target variable and either a list of columns separated by plus symbols (each column corresponds to one predictor 
 	variable) or a single period (to specify that all other columns in the IDA data frame are to be used as predictors.}
-	\item{data}{A IDA data frame that contains the input data for the function. The input IDA data frame 
+	\item{data}{An IDA data frame that contains the input data for the function. The input IDA data frame 
 	must include a column that contains a unique ID for each row.}	
 	\item{id}{The name of the column that contains a unique ID for each row of the input data.}
 	\item{minsplit}{The minimum number of rows a node must contain to be split further.}
@@ -89,7 +79,7 @@ idaTree(
 
 	The output of the plot function for a idaTree object is a graphical representation of the corresponding model.
 
-	Models are stored persistently in database under the name \code{modelname}. Model names cannot have more than 64 characters and
+	Models are stored persistently in the database under the name \code{modelname}. Model names cannot have more than 64 characters and
     cannot contain white spaces. They need to be quoted like table names, otherwise they will be treated upper case by default. Only one
     model with a given name is allowed in the database at a time. If a model with \code{modelname} already exists, you need to drop it with \code{idaDropModel}
     first before you can create another one with the same name. The model name can be used to retrieve the model later (\code{\link{idaRetrieveModel}}).

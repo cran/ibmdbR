@@ -17,14 +17,15 @@
 % 
 \name{as.ida.data.frame}
 \alias{as.ida.data.frame}
-\title{Convert an R object to a IDA data frame}
+\title{Convert an R object to an IDA data frame}
 \description{
-  This function creates a IDA data frame \code{\link{ida.data.frame}} from a local R \code{data.frame}
-  by creating a table in the data base.
+  This function creates an IDA data frame \code{\link{ida.data.frame}} from a local R \code{data.frame}
+  by creating a table in the database.
 }
 
 \usage{
-as.ida.data.frame(x,table=NULL,clear.existing=FALSE,case.sensitive=TRUE)
+as.ida.data.frame(x, table=NULL, clear.existing=FALSE, case.sensitive=TRUE, 
+                  rownames=NULL, dbname=NULL, asAOT=FALSE)
 }
 
 \arguments{
@@ -32,13 +33,17 @@ as.ida.data.frame(x,table=NULL,clear.existing=FALSE,case.sensitive=TRUE)
   \item{table}{The name of the database table that is to be created to hold the 
   contents of the IDA data frame. The specified name is folded to uppercase.
   If this parameter is not specified, a name is generated automatically.}
-  \item{clear.existing}{If the \code{table} parameter is specified and a table with the 
-  specified name already exists, this parameter specifies whether the existing table is to be 
+  \item{clear.existing}{If the \code{table} parameter is specified, 
+  this parameter indicates whether the existing table is to be 
   dropped (TRUE) or whether the \code{as.ida.data.frame} statement is to be ignored and 
   a warning message issued (FALSE).} 
   \item{case.sensitive}{If the \code{table} parameter is specified for an existing table, 
   this parameter specifies whether the column names in that table name are to be treated
   as case-sensitive (TRUE) or not case-sensitive (FALSE).}
+  \item{rownames}{The name of the column for the unique row id. 
+   If the value of this parameter is NULL, this column is not added to the output table.}
+  \item{dbname}{DB2 for z/OS only parameter: the name of the database where the table should be created in.}  
+  \item{asAOT}{DB2 for z/OS only parameter: the table should be created as an "accelerator only table".}  
 }
 
 \value{

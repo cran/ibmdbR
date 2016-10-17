@@ -17,6 +17,20 @@
 idaConnect <- function (dsn, uid = "", pwd = "", conType = "odbc") {
   if(conType == "odbc")
   {
+	if(pwd == "")
+    {
+      wrapper <- "/opt/ibm/Rsupport/dshttpwrapper.R"
+      if(file.exists(wrapper))
+      {
+		getCurrentBLUUserCredential <- function() {
+			list(user="", pass="")
+		}
+        source(wrapper, local=TRUE)
+	    cred <- getCurrentBLUUserCredential()
+	    uid<- cred$user
+	    pwd <- cred$pass			
+      }
+    }
     idaCon <- odbcConnect(dsn,uid,pwd,believeNRows = FALSE)
     invisible(idaCon)
     return(idaCon)

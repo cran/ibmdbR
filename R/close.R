@@ -18,5 +18,8 @@
 idaClose <- function(idaConn, conType = "odbc") {
   if(conType == "odbc"){
     close(idaConn)
+	if(idaIsDb2z()) {
+		assign("p_connectString", "", envir = idaRGlobal)
+	} 
   }
 }

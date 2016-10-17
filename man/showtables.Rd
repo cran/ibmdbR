@@ -23,16 +23,19 @@
   current database.
 }
 \usage{
-idaShowTables(showAll=FALSE, matchStr=NULL)
+idaShowTables(showAll=FALSE, matchStr=NULL, schema=NULL, accelerated=FALSE)
 }
 
 \arguments{
   \item{showAll}{List all tables that are listed in the catalog of the current database (TRUE) or only those tables that are in the current schema (FALSE).}
   \item{matchStr}{If not NULL, only tables that contain the character string in this argument will be returned.}
+  \item{schema}{If not NULL, only tables with this schema will be returned. This parameter is ignored if showAll=FALSE.}
+  \item{accelerated}{Valid for DB2 for z/OS connections only. If TRUE, only accelerated tables will be returned.}
 }
 
 \value{
-  A data frame with the columns Schema, Name, Owner, and Type.
+  A data frame with the columns Schema, Name, Owner, and Type. 
+  For DB2 for z/OS connections the columns Acceleratorname and Enable are included as well.
 }
 \examples{
 \dontrun{

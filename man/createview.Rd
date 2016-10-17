@@ -23,11 +23,12 @@
   Use these functions to create or drop a view that is based on a \code{\link{ida.data.frame}}.
 }
 \usage{
-idaCreateView(x) 
+idaCreateView(x, newColumn = NULL) 
 idaDropView(v) 
 }
 \arguments{
   \item{x}{\code{ida.data.frame} for which a view is to be created.}
+  \item{newColumn}{The expression specifying the column to be added.}
   \item{v}{Name of the view to be dropped.}
 }
 \details{

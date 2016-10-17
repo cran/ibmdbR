@@ -19,8 +19,8 @@
 \alias{idaRetrieveModel}
 \title{Retrieve a predictive model from the database}
 \description{
-Use this function to retrieve from the database a model that was created using the \code{\link{idaNaiveBayes}} 
-or \code{\link{idaKMeans}} function.
+Use this function to retrieve from the database a model that was created using a function like \code{\link{idaNaiveBayes}} 
+or \code{\link{idaKMeans}}.
 }
 
 \usage{
