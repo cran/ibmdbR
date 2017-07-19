@@ -39,7 +39,7 @@
   Please note that whether public tables might not have effect on databases that do not allow to set
   permissions accordingly, for instance, in multi-tenant environments. To enable the sharing of objects in DB2,
   an administrator needs to first create a role names R_USERS_PUBLIC and assign it to all users who
-  should be allowed to share objects. For dashDB, roles will be setup automatically if in the scope of the plan.
+  should be allowed to share objects. For Db2, roles will be setup automatically if in the scope of the plan.
   
 }
 

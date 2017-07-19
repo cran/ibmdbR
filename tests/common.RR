@@ -1,0 +1,5 @@
+dsn.valid <- c("a=b", "a=b;", "a=b;c=d;", "abc;a=b", "abc;a=b;")
+dsn.invalid <- c("abc", "abc;a=b;a")
+
+all(ibmdbR:::isDSNString(dsn.valid) == TRUE)
+all(ibmdbR:::isDSNString(dsn.invalid) == FALSE)

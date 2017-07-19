@@ -1,5 +1,5 @@
 # 
-# Copyright (c) 2010, 2014, IBM Corp. All rights reserved. 
+# Copyright (c) 2010, 2014, 2016, 2017 IBM Corp. All rights reserved. 
 # 		
 # This program is free software: you can redistribute it and/or modify 
 # it under the terms of the GNU General Public License as published by 
@@ -13,8 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License 
 # along with this program. If not, see <http://www.gnu.org/licenses/>. 
-# 
-# 
+#
 
 utils::globalVariables(c("idaRGlobal"))
 
@@ -25,47 +24,46 @@ idaShowTables <- function(showAll=FALSE, matchStr=NULL, schema=NULL, accelerated
   if (!is.null(matchStr) && !is.character(matchStr))
     stop("This function can only be applied to character values.")
   
-if(idaIsDb2z()) {
-  
-  wherePart <- "WHERE (not s.CREATOR like 'SYS%') ";
-  if(!showAll) {
-    currSchema <- idaGetCurrentSchema();	
-    wherePart <- paste("WHERE (s.CREATOR = '",currSchema,"') ",sep='');
-  } else if (!is.null(schema))  {	
-    wherePart <- paste("WHERE (s.CREATOR = '",schema,"') ",sep='');
-  }
-  
-  if (accelerated) {
-     accelerator <- idaGetAccelerator(); 
-	 if (accelerator == "") {
-	    stop('For the "accelerated=TRUE"" option the accelerator has to be set with the idaSetAccelerator function.')
-	 } else {
-	    wherePart <- paste( wherePart, "AND (a.ACCELERATORNAME = '", accelerator, "') ", sep="")
-	 } 
-  }
-  if (!is.null(matchStr))
-    wherePart <- paste(wherePart," AND s.NAME LIKE '%", paste(matchStr,collapse='%',sep=''), "%'", sep='')
+  if(idaIsDb2z()) {
+    wherePart <- "WHERE (not s.CREATOR like 'SYS%') ";
+    if(!showAll) {
+      currSchema <- idaGetCurrentSchema();	
+      wherePart <- paste("WHERE (s.CREATOR = '",currSchema,"') ",sep='');
+    } else if (!is.null(schema))  {	
+      wherePart <- paste("WHERE (s.CREATOR = '",schema,"') ",sep='');
+    }
     
-  query <- 	paste("SELECT distinct s.CREATOR as \"Schema\", s.NAME as \"Name\", s.OWNER as \"Owner\", s.TYPE as \"Type\", ", 
-					"coalesce(a.ACCELERATORNAME, '') as \"Acceleratorname\", coalesce(a.ENABLE, ' ') as \"Enable\" ", 
-					"from SYSIBM.SYSTABLES s left outer join SYSACCEL.SYSACCELERATEDTABLES a ",   
-					"on s.CREATOR = a.CREATOR and s.NAME=a.NAME ", 
-					wherePart,
-					"ORDER BY \"Schema\",\"Name\"")
-  # idaQuery('SELECT distinct CREATOR as "Schema", NAME as "Name", OWNER as "Owner", TYPE as "Type" from SYSIBM.SYSTABLES ', wherePart ,'ORDER BY "Schema","Name"')
-  idaQuery(query)
-} else {
-  wherePart <- "WHERE (OWNERTYPE = 'U')";
-  if(!showAll) {
-    currSchema <- idaGetCurrentSchema();	
-    wherePart <- paste(wherePart," AND (TABSCHEMA= '",currSchema,"') ",sep='');
-  }
-  
-  if (!is.null(matchStr))
-    wherePart <- paste(wherePart," AND TABNAME LIKE '%", paste(matchStr,collapse='%',sep=''), "%'", sep='')
-  
-  idaQuery('SELECT distinct TABSCHEMA as "Schema", TABNAME as "Name", OWNER as "Owner", TYPE as "Type" from SYSCAT.TABLES ', wherePart ,'ORDER BY "Schema","Name"')
-
+    if (accelerated) {
+      accelerator <- idaGetAccelerator(); 
+      if (accelerator == "") {
+        stop('For the "accelerated=TRUE"" option the accelerator has to be set with the idaSetAccelerator function.')
+      } else {
+        wherePart <- paste( wherePart, "AND (a.ACCELERATORNAME = '", accelerator, "') ", sep="")
+      } 
+    }
+    if (!is.null(matchStr))
+      wherePart <- paste(wherePart," AND s.NAME LIKE '%", paste(matchStr,collapse='%',sep=''), "%'", sep='')
+    
+    query <- 	paste("SELECT distinct s.CREATOR as \"Schema\", s.NAME as \"Name\", s.OWNER as \"Owner\", s.TYPE as \"Type\", ", 
+                    "coalesce(a.ACCELERATORNAME, '') as \"Acceleratorname\", coalesce(a.ENABLE, ' ') as \"Enable\" ", 
+                    "from SYSIBM.SYSTABLES s left outer join SYSACCEL.SYSACCELERATEDTABLES a ",   
+                    "on s.CREATOR = a.CREATOR and s.NAME=a.NAME ", 
+                    wherePart,
+                    "ORDER BY \"Schema\",\"Name\"")
+    # idaQuery('SELECT distinct CREATOR as "Schema", NAME as "Name", OWNER as "Owner", TYPE as "Type" from SYSIBM.SYSTABLES ', wherePart ,'ORDER BY "Schema","Name"')
+    idaQuery(query)
+  } else {
+    wherePart <- "WHERE (OWNERTYPE = 'U')";
+    if(!showAll) {
+      currSchema <- idaGetCurrentSchema();	
+      wherePart <- paste(wherePart," AND (TABSCHEMA= '",currSchema,"') ",sep='');
+    }
+    
+    if (!is.null(matchStr))
+      wherePart <- paste(wherePart," AND TABNAME LIKE '%", paste(matchStr,collapse='%',sep=''), "%'", sep='')
+    
+    idaQuery('SELECT distinct TABSCHEMA as "Schema", TABNAME as "Name", OWNER as "Owner", TYPE as "Type" from SYSCAT.TABLES ', wherePart ,'ORDER BY "Schema","Name"')
+    
   }
 }
 
@@ -77,11 +75,11 @@ idaGetCurrentSchema <- function() {
 
 prepareCatalogLookup <- function(tableName) {
   x <- parseTableName(tableName);
-	if(idaIsDb2z()) {
-		return(paste("NAME='",x$table,"'",ifelse(!is.null(x$schema),paste(" AND CREATOR = '",x$schema,"'",sep=''),''),sep=''));
-	} else {
-		return(paste("TABNAME='",x$table,"'",ifelse(!is.null(x$schema),paste(" AND TABSCHEMA = '",x$schema,"'",sep=''),''),sep=''));			
-	}
+  if(idaIsDb2z()) {
+    return(paste("NAME='",x$table,"'",ifelse(!is.null(x$schema),paste(" AND CREATOR = '",x$schema,"'",sep=''),''),sep=''));
+  } else {
+    return(paste("TABNAME='",x$table,"'",ifelse(!is.null(x$schema),paste(" AND TABSCHEMA = '",x$schema,"'",sep=''),''),sep=''));			
+  }
 }
 
 parseTableName <- function(tableName,removeQuotes=T,disallowQuotes=F) {
@@ -150,20 +148,20 @@ parseTableName <- function(tableName,removeQuotes=T,disallowQuotes=F) {
 
 idaExistDatabase <- function (databaseName) {
   if(idaIsDb2z()) {
-	idaCheckConnection();
-	databaseExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSIBM.SYSDATABASE WHERE NAME = '", databaseName, "'"))>0);
-	return(databaseExists);
+    idaCheckConnection();
+    databaseExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSIBM.SYSDATABASE WHERE NAME = '", databaseName, "'"))>0);
+    return(databaseExists);
   } else {
-	stop("The idaExistDatabase and idaDropDatabase functions are defined for connections to DB2 for z/OS subsystems only.");
+    stop("The idaExistDatabase and idaDropDatabase functions are defined for connections to DB2 for z/OS subsystems only.");
   }
 }
 
 idaExistTablespace <- function (tbspName) {
   idaCheckConnection();
   if(idaIsDb2z()) {
-	tableExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSIBM.SYSTABLESPACE WHERE NAME = '", tbspName, "'"))>0);
+    tableExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSIBM.SYSTABLESPACE WHERE NAME = '", tbspName, "'"))>0);
   } else {
-	tableExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.TABLESPACES WHERE TBSPACE = '", tbspName, "'"))>0);
+    tableExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.TABLESPACES WHERE TBSPACE = '", tbspName, "'"))>0);
   }
   return(tableExists);
 }
@@ -171,13 +169,13 @@ idaExistTablespace <- function (tbspName) {
 idaGetValidTablespaceName <- function () {
   idaCheckConnection();
   prefix <-toupper("TSP"); 
-   while (TRUE) {
+  while (TRUE) {
     # for DB2 for z/OS the names tablespaces consist of 8 or less characters
-	name = paste(prefix, floor(runif(1,0,99999)), sep="")
+    name = paste(prefix, floor(runif(1,0,99999)), sep="")
     if (!idaExistTablespace(name))
       return(name)
   }
-
+  
   return(name)
 }
 
@@ -187,9 +185,9 @@ idaExistTable <- function (tableName) {
   idaCheckConnection();
   cmp <- prepareCatalogLookup(tableName)
   if(idaIsDb2z()) {
-	tableExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSIBM.SYSTABLES WHERE ", cmp))>0);
+    tableExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSIBM.SYSTABLES WHERE ", cmp))>0);
   } else {
-	tableExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.TABLES WHERE ", cmp))>0);
+    tableExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.TABLES WHERE ", cmp))>0);
   }
   return(tableExists);
 }
@@ -199,9 +197,9 @@ idaIsView <- function (tableName) {
   idaCheckConnection();
   cmp <- paste(prepareCatalogLookup(tableName), " AND TYPE = 'V'",sep=''); 
   if(idaIsDb2z()) {
-	viewExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSIBM.SYSTABLES WHERE ", cmp))>0);
+    viewExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSIBM.SYSTABLES WHERE ", cmp))>0);
   } else {
-	viewExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.TABLES WHERE ", cmp))>0);
+    viewExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.TABLES WHERE ", cmp))>0);
   }
   return(viewExists);
 }
@@ -209,12 +207,12 @@ idaIsView <- function (tableName) {
 idaListTableColumns <- function (tableName) {
   idaCheckConnection();
   if(idaIsDb2z()) {
-	x <- parseTableName(tableName);
-	cmp <- paste("TBNAME='",x$table,"'",ifelse(!is.null(x$schema),paste(" AND TBCREATOR = '",x$schema,"'",sep=''),''),sep='')
-	return(as.vector(idaQuery("SELECT NAME FROM SYSIBM.SYSCOLUMNS WHERE ",cmp," ORDER BY COLNO ASC")[[1]]))  
+    x <- parseTableName(tableName);
+    cmp <- paste("TBNAME='",x$table,"'",ifelse(!is.null(x$schema),paste(" AND TBCREATOR = '",x$schema,"'",sep=''),''),sep='')
+    return(as.vector(idaQuery("SELECT NAME FROM SYSIBM.SYSCOLUMNS WHERE ",cmp," ORDER BY COLNO ASC")[[1]]))  
   } else {
-	cmp <- prepareCatalogLookup(tableName)
-	return(as.vector(idaQuery("SELECT COLNAME FROM SYSCAT.COLUMNS WHERE ",cmp," ORDER BY COLNO ASC")[[1]]))
+    cmp <- prepareCatalogLookup(tableName)
+    return(as.vector(idaQuery("SELECT COLNAME FROM SYSCAT.COLUMNS WHERE ",cmp," ORDER BY COLNO ASC")[[1]]))
   }
 }
 
@@ -222,18 +220,15 @@ idaListTableColumns <- function (tableName) {
 idaExistColumnInTable <- function (columnName, tableName) {
   idaCheckConnection();
   if(idaIsDb2z()) {
-	x <- parseTableName(tableName);
-	cmp <- paste("TBNAME='",x$table,"'",ifelse(!is.null(x$schema),paste(" AND TBCREATOR = '",x$schema,"' AND NAME = '", columnName, "'", sep=''),''),sep="")
-	columnExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSIBM.SYSCOLUMNS WHERE ",cmp ))>0)
+    x <- parseTableName(tableName);
+    cmp <- paste("TBNAME='",x$table,"'",ifelse(!is.null(x$schema),paste(" AND TBCREATOR = '",x$schema,"' AND NAME = '", columnName, "'", sep=''),''),sep="")
+    columnExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSIBM.SYSCOLUMNS WHERE ",cmp ))>0)
   } else {
-	cmp <- paste( prepareCatalogLookup(tableName), " AND COLNAME = '", columnName, "'", sep="")
-	columnExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.COLUMNS WHERE ",cmp ))>0)
+    cmp <- paste( prepareCatalogLookup(tableName), " AND COLNAME = '", columnName, "'", sep="")
+    columnExists <- as.logical(as.integer(idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM SYSCAT.COLUMNS WHERE ",cmp ))>0)
   }
   return(columnExists)
 }
-
-
-
 
 idaDeleteViewOrTable <- function(tableName) {
   if(idaIsView(tableName)) {
@@ -248,11 +243,11 @@ idaDeleteTable <- function(table) {
     idaDeleteViewOrTable(table@table)
   } else {
     if (idaExistTable(table)) {
-		if (idaIsDb2z() && isAccelerated(table)) {
-			accelerateTable(table, undo=TRUE)
-		}
+      if (idaIsDb2z() && isAccelerated(table)) {
+        accelerateTable(table, undo=TRUE)
+      }
       idaQuery("DROP TABLE ", table)
-	}  
+    }  
     invisible()
   }
 }
@@ -263,10 +258,10 @@ idaDropView <- function(v) {
 }
 
 idaDropDatabase <- function(dbname) {
-	if (idaExistDatabase(dbname)
-		&& idaScalarQuery("select count(*) from SYSIBM.SYSTABLES where DBNAME = '", dbname, "'") == 0) {
-		idaQuery("DROP DATABASE ", dbname)
-	}  
+  if (idaExistDatabase(dbname)
+      && idaScalarQuery("select count(*) from SYSIBM.SYSTABLES where DBNAME = '", dbname, "'") == 0) {
+    idaQuery("DROP DATABASE ", dbname)
+  }  
 }
 
 idaDeleteTempTables <- function(pattern='DATA_FRAME_[0-9]+') {
@@ -309,11 +304,10 @@ idaDeleteTempTables <- function(pattern='DATA_FRAME_[0-9]+') {
       }
       else if (choice=='y') {
         idaDeleteViewOrTable(paste('"', schema, '"."', tempTab$Name, '"', sep=''))
-	  } 
+      } 
     } 
   }
 }
-
 
 idaQuery <- function (..., as.is = TRUE, na.strings = "NA")  {
   
@@ -321,11 +315,11 @@ idaQuery <- function (..., as.is = TRUE, na.strings = "NA")  {
   
   # for a DB2/z connection id the connection has been lost
   if (idaIsDb2z() & get("p_connectString", envir=idaRGlobal) != "") {
-	conWorking=FALSE
-	try({conWorking <-odbcQuery(get("p_idaConnection", envir=idaRGlobal), "select count(*) from sysibm.sysdummy1")>0}, silent=TRUE)
-	if (!conWorking) {
-		reconnect()
-	}	
+    conWorking=FALSE
+    try({conWorking <-odbcQuery(get("p_idaConnection", envir=idaRGlobal), "select count(*) from sysibm.sysdummy1")>0}, silent=TRUE)
+    if (!conWorking) {
+      reconnect()
+    }	
   }
   
   query <- paste(..., sep = "", collapse = "")
@@ -335,7 +329,7 @@ idaQuery <- function (..., as.is = TRUE, na.strings = "NA")  {
   }
   
   result <- sqlQuery(get("p_idaConnection", envir=idaRGlobal), query, believeNRows = FALSE, 
-      stringsAsFactors = FALSE, as.is = as.is, na.strings = na.strings)
+                     stringsAsFactors = FALSE, as.is = as.is, na.strings = na.strings)
   
   #we got an error message
   if (is.character(result) && length(result) > 0) {
@@ -382,33 +376,33 @@ callSP <- function (spname, retvalcolumn=NULL, ...) {
   }
   
   if(idaIsDb2z()) {
-	acceleratorName = idaGetAccelerator(); 
-	try({idaQuery("DELETE FROM SESSION.INZA_MSG")});
-	retvalcolexpr <- ""; 
-	if (!is.null(retvalcolumn) && retvalcolumn != "")  {
-		retvalcolexpr <- paste(", ", retvalcolumn, sep="")
-	} 
-	res <- try(idaQuery("CALL INZAR.", spname, "('", acceleratorName, "', '", paste(tmp, collapse = ","), "', 'SESSION.INZA_MSG(MESSAGE ", retvalcolexpr, ")')"), silent=T);
+    acceleratorName = idaGetAccelerator(); 
+    try({idaQuery("DELETE FROM SESSION.INZA_MSG")});
+    retvalcolexpr <- ""; 
+    if (!is.null(retvalcolumn) && retvalcolumn != "")  {
+      retvalcolexpr <- paste(", ", retvalcolumn, sep="")
+    } 
+    res <- try(idaQuery("CALL INZAR.", spname, "('", acceleratorName, "', '", paste(tmp, collapse = ","), "', 'SESSION.INZA_MSG(MESSAGE ", retvalcolexpr, ")')"), silent=T);
   } else {
-	res <- try(idaQuery("CALL IDAX.", spname, "('", paste(tmp, collapse = ","), "')"), silent=T)
+    res <- try(idaQuery("CALL IDAX.", spname, "('", paste(tmp, collapse = ","), "')"), silent=T)
   }
   for (view in views) idaDropView(view)
   
   if(idaIsDb2z()) {
-      message <- sqlQuery(get("p_idaConnection",envir=idaRGlobal), "select MESSAGE from SESSION.INZA_MSG")$MESSAGE
-      if (regexpr("The operation was completed successfully.", message, fixed=TRUE) > 0)  {
-	    if (!is.null(retvalcolumn) && retvalcolumn != "")  {
-			res <- try(idaQuery("SELECT ", retvalcolumn, " FROM SESSION.INZA_MSG"))[1,1]
-		} else if (!is.list(res) ) { # no result set has been returned 
-			res  <- matrix(c(0),1,1)
-		} 
-	  } else {
-	    startpos = regexpr("<message", message, fixed=TRUE) +9
-		endpos = regexpr("</message>", message, fixed=TRUE) -1
-	    fullError <- gsub("&apos;", "'", gsub("&quot;", '"', substr(message, startpos, endpos)))
-	    #  fullError <- sprintf("The call of the stored procedure %s failed.", spname)
-        stop(fullError)
-	  } 
+    message <- sqlQuery(get("p_idaConnection",envir=idaRGlobal), "select MESSAGE from SESSION.INZA_MSG")$MESSAGE
+    if (regexpr("The operation was completed successfully.", message, fixed=TRUE) > 0)  {
+      if (!is.null(retvalcolumn) && retvalcolumn != "")  {
+        res <- try(idaQuery("SELECT ", retvalcolumn, " FROM SESSION.INZA_MSG"))[1,1]
+      } else if (!is.list(res) ) { # no result set has been returned 
+        res  <- matrix(c(0),1,1)
+      } 
+    } else {
+      startpos = regexpr("<message", message, fixed=TRUE) +9
+      endpos = regexpr("</message>", message, fixed=TRUE) -1
+      fullError <- gsub("&apos;", "'", gsub("&quot;", '"', substr(message, startpos, endpos)))
+      #  fullError <- sprintf("The call of the stored procedure %s failed.", spname)
+      stop(fullError)
+    } 
   } else if(inherits(res, "try-error")) {
     fullError <- idaScalarQuery("values idax.last_message")
     if(nchar(fullError)==0)
@@ -420,43 +414,38 @@ callSP <- function (spname, retvalcolumn=NULL, ...) {
 
 # available for DB2 z/OS only
 accelerateTable <-function(tableName, undo=FALSE) {
-	if(idaIsDb2z()) {
-		procName = "INZAR.ACCELERATE_TABLE"
-		if (undo) {
-			procName = "INZAR.ACCEL_REMOVE_TABLE"
-		}	
-		acceleratorName = idaGetAccelerator(); 
-		x <- parseTableName(tableName);
-		try({idaQuery("DELETE FROM SESSION.INZA_MSG")})
-		idaQuery(paste("call ", procName, "('", acceleratorName, "', '", x$schema, "', '", x$table, "', 'SESSION.INZA_MSG(MESSAGE)')", sep=""))
-		message <- sqlQuery(get("p_idaConnection",envir=idaRGlobal), "select MESSAGE from SESSION.INZA_MSG")$MESSAGE
-		if (regexpr("The operation was completed successfully.", message, fixed=TRUE) > 0)  {	
-			return( matrix(c(0),1,1) )
-		} else {
-			startpos <- regexpr("<message", message, fixed=TRUE) +9
-			endpos <- regexpr("</message>", message, fixed=TRUE) -1
-			fullError <- gsub("&apos;", "'", gsub("&quot;", '"', substr(message, startpos, endpos)))
-			stop(fullError)
-		}	
-	}
+  if(idaIsDb2z()) {
+    procName = "INZAR.ACCELERATE_TABLE"
+    if (undo) {
+      procName = "INZAR.ACCEL_REMOVE_TABLE"
+    }	
+    acceleratorName = idaGetAccelerator(); 
+    x <- parseTableName(tableName);
+    try({idaQuery("DELETE FROM SESSION.INZA_MSG")})
+    idaQuery(paste("call ", procName, "('", acceleratorName, "', '", x$schema, "', '", x$table, "', 'SESSION.INZA_MSG(MESSAGE)')", sep=""))
+    message <- sqlQuery(get("p_idaConnection",envir=idaRGlobal), "select MESSAGE from SESSION.INZA_MSG")$MESSAGE
+    if (regexpr("The operation was completed successfully.", message, fixed=TRUE) > 0)  {	
+      return( matrix(c(0),1,1) )
+    } else {
+      startpos <- regexpr("<message", message, fixed=TRUE) +9
+      endpos <- regexpr("</message>", message, fixed=TRUE) -1
+      fullError <- gsub("&apos;", "'", gsub("&quot;", '"', substr(message, startpos, endpos)))
+      stop(fullError)
+    }	
+  }
 }	
-
 
 isAccelerated <- function(tableName) {
-	if(idaIsDb2z()) {
-		x <- parseTableName(tableName)
-		query <- paste("select count(*)from SYSIBM.SYSTABLES s left outer join SYSACCEL.SYSACCELERATEDTABLES a ",   
-						"on s.CREATOR = a.CREATOR and s.NAME=a.NAME ", 
-						"where s.CREATOR = '", x$schema, "'and s.NAME = '", x$table, "' and s.TYPE ='T'", sep="")
-		return(idaScalarQuery(query) > 0)						
-	} else {
-		return(FALSE)
-	}
+  if(idaIsDb2z()) {
+    x <- parseTableName(tableName)
+    query <- paste("select count(*)from SYSIBM.SYSTABLES s left outer join SYSACCEL.SYSACCELERATEDTABLES a ",   
+                   "on s.CREATOR = a.CREATOR and s.NAME=a.NAME ", 
+                   "where s.CREATOR = '", x$schema, "'and s.NAME = '", x$table, "' and s.TYPE ='T'", sep="")
+    return(idaScalarQuery(query) > 0)						
+  } else {
+    return(FALSE)
+  }
 }	
-
-
-
-
 
 ################ Table def ############################
 idaTableDef <- function(bdf,  collapse=TRUE) {
@@ -469,11 +458,11 @@ idaTableDef <- function(bdf,  collapse=TRUE) {
     bdf <- ida.data.frame(viewName);
   }	
   if(idaIsDb2z()) {
-	x <- parseTableName(bdf@table);
-	cmp <- paste("TBNAME='",x$table,"'",ifelse(!is.null(x$schema),paste(" AND TBCREATOR = '",x$schema,"'",sep=''),''),sep='')
-	attrs <- idaQuery("SELECT NAME AS COLNAME,trim(COLTYPE) AS TYPENAME FROM SYSIBM.SYSCOLUMNS WHERE ",cmp," ORDER BY COLNO ASC")  
+    x <- parseTableName(bdf@table);
+    cmp <- paste("TBNAME='",x$table,"'",ifelse(!is.null(x$schema),paste(" AND TBCREATOR = '",x$schema,"'",sep=''),''),sep='')
+    attrs <- idaQuery("SELECT NAME AS COLNAME,trim(COLTYPE) AS TYPENAME FROM SYSIBM.SYSCOLUMNS WHERE ",cmp," ORDER BY COLNO ASC")  
   } else {
-	attrs <- idaQuery("SELECT COLNAME, TYPENAME FROM SYSCAT.COLUMNS WHERE ",prepareCatalogLookup(bdf@table), " ORDER BY COLNO")
+    attrs <- idaQuery("SELECT COLNAME, TYPENAME FROM SYSCAT.COLUMNS WHERE ",prepareCatalogLookup(bdf@table), " ORDER BY COLNO")
   }
   
   if(!is.null(viewName)) {
@@ -491,8 +480,6 @@ idaTableDef <- function(bdf,  collapse=TRUE) {
   }
 }
 
-
-
 idaMaterialize <- function(idf,tableName, asAOT=TRUE, dbname="") {
   
   v <- idaCreateView(idf)
@@ -501,30 +488,34 @@ idaMaterialize <- function(idf,tableName, asAOT=TRUE, dbname="") {
     stop("Table already exists, choose a different name.")	
   }	
   tryCatch({
-        
-        odbcSetAutoCommit(get("p_idaConnection",envir=idaRGlobal), autoCommit = FALSE)
-		if(idaIsDb2z()) {
-			createDB2zTableAs(tableName, v, dbname=dbname, asAOT=asAOT)
-			odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = TRUE);
-		} else {
-			idaQuery("CREATE TABLE ", tableName, " LIKE ", v," ORGANIZE BY ROW NOT LOGGED INITIALLY");
-		}
-        
-        idaQuery("INSERT INTO ", tableName, " SELECT * FROM ", v);
-        if(idaIsDb2z() && !asAOT) {
-			accelerateTable(tableName)
-		}
-			
-        odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = TRUE);
-        
-      },
-      error=function(e){print(e);odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = FALSE); if(idaIsDb2z()) idaDeleteTable(tableName)},
-      finally={odbcSetAutoCommit(get("p_idaConnection",envir=idaRGlobal), autoCommit = TRUE);idaDropView(v)}
+    odbcSetAutoCommit(get("p_idaConnection",envir=idaRGlobal), autoCommit = FALSE)
+    if(idaIsDb2z()) {
+      createDB2zTableAs(tableName, v, dbname=dbname, asAOT=asAOT)
+      odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = TRUE);
+    } else {
+      idaQuery("CREATE TABLE ", tableName, " LIKE ", v," ORGANIZE BY ROW NOT LOGGED INITIALLY");
+    }
+    
+    idaQuery("INSERT INTO ", tableName, " SELECT * FROM ", v);
+    
+    if(idaIsDb2z() && !asAOT) {
+      accelerateTable(tableName)
+    }
+    
+    odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = TRUE);
+  }, error=function(e) {
+    print(e);
+    odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = FALSE); 
+    if(idaIsDb2z()) idaDeleteTable(tableName)
+  }, finally={
+    odbcSetAutoCommit(get("p_idaConnection",envir=idaRGlobal), autoCommit = TRUE);
+    idaDropView(v)
+  }
   );
 }
 
 idaAppend <- function(df, table) {
-  sqlSave(get("p_idaConnection",envir=idaRGlobal), dat=df, tablename = table, rownames=F,append=T);
+  sqlSave(get("p_idaConnection", envir=idaRGlobal), dat=df, tablename = table, rownames=F, append=T);
 }
 
 ##############################  Utilities ############################
@@ -537,7 +528,19 @@ removeQuotes <- function(x) {
     return(x)
   }
   else
-  	return (x)
+    return (x)
+}
+
+quoteSQLIdentifier <- function(x) {
+  # quote quotes
+  x <- gsub('"', '""', x, fixed = TRUE)
+  x <- gsub("'", "''", x, fixed = TRUE)
+  if (nzchar(x)) {
+    # quote statement
+    return(paste0('"', x, '"'))
+  } else {
+    return("")
+  }
 }
 
 colName <- function(colDef) {
@@ -548,7 +551,7 @@ colName <- function(colDef) {
   tab <- colDef@table
   if (term %in% tab@cols)
     return(term)
-    
+  
   defCols <- tab@colDefs
   if (is.null(defCols) || length(defCols)==0)
     return(NULL)
@@ -571,133 +574,132 @@ idaLTrim <- function (x) sub("^\\s+", "", x)
 # res is the result of an DB2/z INZA procedure call
 # which is a data frame with columns SEQID and TABLE_DETAILS
 idaDataFrameFromResultSet <- function(res)  {
-   rows <- strsplit(res$TABLES_DETAILS, '\n') [[1]]
-   nrows = length(rows)
-   #first create an empty data frame
-   colnames = strsplit(rows[2], '|', fixed=TRUE )[[1]]
-   ncols = length(colnames)
-   colname = idaTrim(colnames[1])
-   trimmedColnames = c(colname)
-   df <- data.frame("X"=1:(nrows-3))
-   
-   for(i in 2:(ncols)){
-      colname = idaTrim(colnames[i])
-	  trimmedColnames = c(trimmedColnames, colname)
-	  df <- cbind(df, 1:(nrows-3))
-   }
-   colnames(df)<- trimmedColnames
-   
-   for (i in 4:(nrows)) {
-	  rowvals = strsplit(rows[i], '|', fixed=TRUE )[[1]]
-	  for (j in 1:ncols) {
-		df[i-3, j]<- idaRTrim(substring(rowvals[j],2))
-	  }
-   }
-   return(df)
+  rows <- strsplit(res$TABLES_DETAILS, '\n') [[1]]
+  nrows = length(rows)
+  #first create an empty data frame
+  colnames = strsplit(rows[2], '|', fixed=TRUE )[[1]]
+  ncols = length(colnames)
+  colname = idaTrim(colnames[1])
+  trimmedColnames = c(colname)
+  df <- data.frame("X"=1:(nrows-3))
+  
+  for(i in 2:(ncols)){
+    colname = idaTrim(colnames[i])
+    trimmedColnames = c(trimmedColnames, colname)
+    df <- cbind(df, 1:(nrows-3))
+  }
+  colnames(df)<- trimmedColnames
+  
+  for (i in 4:(nrows)) {
+    rowvals = strsplit(rows[i], '|', fixed=TRUE )[[1]]
+    for (j in 1:ncols) {
+      df[i-3, j]<- idaRTrim(substring(rowvals[j],2))
+    }
+  }
+  return(df)
 }
 
 
 idaDataFrameFromResultStr.old <- function(resStr)  {
-   rows <- strsplit(resStr, '\n') [[1]]
-   nrows = length(rows)
-   #first create an empty data frame
-   colnames = strsplit(rows[2], '|', fixed=TRUE )[[1]]
-   ncols = length(colnames)
-   colname = idaTrim(colnames[1])
-   trimmedColnames = c(colname)
-   df <- data.frame("X"=1:(nrows-3))
-   
-   for(i in 2:(ncols)){
-      colname = idaTrim(colnames[i])
-	  trimmedColnames = c(trimmedColnames, colname)
-	  df <- cbind(df, 1:(nrows-3))
-   }
-   colnames(df)<- trimmedColnames
-   
-   if (nrows >= 4) {
-	for (i in 4:(nrows)) {
-	  rowvals = strsplit(rows[i], '|', fixed=TRUE )[[1]]
-	  for (j in 1:ncols) {
-		df[i-3, j]<- idaRTrim(substring(rowvals[j],2))
-	  }
-	}
-   } else {
-	# the result set is empty, but df has 2 rows, remove them
-	df <- df[-c(1,2),] 
-   }
-   return(df)
+  rows <- strsplit(resStr, '\n') [[1]]
+  nrows = length(rows)
+  #first create an empty data frame
+  colnames = strsplit(rows[2], '|', fixed=TRUE )[[1]]
+  ncols = length(colnames)
+  colname = idaTrim(colnames[1])
+  trimmedColnames = c(colname)
+  df <- data.frame("X"=1:(nrows-3))
+  
+  for(i in 2:(ncols)){
+    colname = idaTrim(colnames[i])
+    trimmedColnames = c(trimmedColnames, colname)
+    df <- cbind(df, 1:(nrows-3))
+  }
+  colnames(df)<- trimmedColnames
+  
+  if (nrows >= 4) {
+    for (i in 4:(nrows)) {
+      rowvals = strsplit(rows[i], '|', fixed=TRUE )[[1]]
+      for (j in 1:ncols) {
+        df[i-3, j]<- idaRTrim(substring(rowvals[j],2))
+      }
+    }
+  } else {
+    # the result set is empty, but df has 2 rows, remove them
+    df <- df[-c(1,2),] 
+  }
+  return(df)
 }
 
 
 idaDataFrameFromResultStr <- function(resStr, rowSplitStr='\n', columnSplitStr = ' | ', headerRow=2, skippedDataRows=1, skippedRowChars=1)  {
-   skippedRows <- skippedDataRows + headerRow-1
-   rows <- strsplit(resStr, rowSplitStr, fixed=TRUE) [[1]]
-   nrows = length(rows)
-   #first create an empty data frame
-   colnames = strsplit(rows[headerRow], columnSplitStr, fixed=TRUE )[[1]]
-   ncols = length(colnames)
-   colname = idaTrim(colnames[1])
-   trimmedColnames = c(colname)
-   df <- data.frame("X"=1:(nrows-1-skippedRows))
-   
-   for(i in 2:(ncols)){
-      colname = idaTrim(colnames[i])
-	  trimmedColnames = c(trimmedColnames, colname)
-	  df <- cbind(df, 1:(nrows-1-skippedRows))
-   }
-   colnames(df)<- trimmedColnames
-   
-   if (nrows >= skippedRows+2) {
-	for (i in (skippedRows+2):(nrows)) {
-	  rowvals = strsplit(substr(rows[i], skippedRowChars+1, nchar(rows[i])), columnSplitStr, fixed=TRUE )[[1]]
-	  for (j in 1:ncols) {
-		df[i-1-skippedRows, j]<- idaRTrim(rowvals[j])
-	  }
-	}
-   } else if (skippedRows > 0){
-	# the result set is empty, but df has the skipped rows, remove them
-	df <- df[-c(1,skippedRows),] 
-   }
-   
-   return(df)
+  skippedRows <- skippedDataRows + headerRow-1
+  rows <- strsplit(resStr, rowSplitStr, fixed=TRUE) [[1]]
+  nrows = length(rows)
+  #first create an empty data frame
+  colnames = strsplit(rows[headerRow], columnSplitStr, fixed=TRUE )[[1]]
+  ncols = length(colnames)
+  colname = idaTrim(colnames[1])
+  trimmedColnames = c(colname)
+  df <- data.frame("X"=1:(nrows-1-skippedRows))
+  
+  for(i in 2:(ncols)){
+    colname = idaTrim(colnames[i])
+    trimmedColnames = c(trimmedColnames, colname)
+    df <- cbind(df, 1:(nrows-1-skippedRows))
+  }
+  colnames(df)<- trimmedColnames
+  
+  if (nrows >= skippedRows+2) {
+    for (i in (skippedRows+2):(nrows)) {
+      rowvals = strsplit(substr(rows[i], skippedRowChars+1, nchar(rows[i])), columnSplitStr, fixed=TRUE )[[1]]
+      for (j in 1:ncols) {
+        df[i-1-skippedRows, j]<- idaRTrim(rowvals[j])
+      }
+    }
+  } else if (skippedRows > 0){
+    # the result set is empty, but df has the skipped rows, remove them
+    df <- df[-c(1,skippedRows),] 
+  }
+  
+  return(df)
 }
 
 
 createDB2zTableAs <- function(tableName, asTableView, asAOT=TRUE, dbname="") {
-	cols <- idaQuery("SELECT NAME,trim(COLTYPE) AS COLTYPE, LENGTH, SCALE FROM SYSIBM.SYSCOLUMNS WHERE TBNAME ='", asTableView,"' ORDER BY COLNO ASC")  
-	createTableStmt <- paste("CREATE TABLE ", tableName, " (", sep="")
-	for(i in 1:nrow(cols)) {
-		colType <- cols[i,"COLTYPE"]
-		if (colType == "VARBIN") colType <- "VARBINARY"
-		else if (colType == "VARG") colType <- "VARGRAPHIC"
-		else if (colType == "TIMESTMP") colType <- "TIMESTAMP"
-		else if (colType == "TIMESTZ") colType <- "TIMESTAMP WITH TIME ZONE"
-		
-  		colDecl <- paste("\"", cols[i,"NAME"], "\" ", colType, sep="")
-		if ( colType %in% c("CHAR", "VARCHAR", "LONGVAR", "BINARY", "VARBINARY", "GRAPHIC", "VARGRAPHIC", "DECIMAL", "LONGVARG", "DECFLOAT") ) {
-			colDecl <- paste(colDecl, "(", cols[i,"LENGTH"], sep="")
-			if ( colType %in% c("DECIMAL") ) {
-				colDecl <- paste(colDecl, ", ", cols[i,"SCALE"], sep="")
-			}
-			colDecl <- paste(colDecl, ")", sep="")
-		}
-		if (i < nrow(cols)) {
-			colDecl <- paste(colDecl, ", ", sep="")
-		}
-		createTableStmt <- paste(createTableStmt, colDecl, sep="")
-  	}
-	createTableStmt <- paste(createTableStmt, ")", sep="")	
-	if (asAOT) {
-		createTableStmt <- paste(createTableStmt, " IN ACCELERATOR ", idaGetAccelerator(), sep="")
-	} else if (dbname != "") {
-		if (!idaExistDatabase(dbname)) {
-			idaQuery("CREATE DATABASE ", dbname, " CCSID ", idaGetAcceleratorEncoding())	
-		}
-		tbsp <- idaGetValidTablespaceName()
-        idaQuery("CREATE TABLESPACE ", tbsp, " IN ", dbname, " CCSID ", idaGetAcceleratorEncoding())
-		createTableStmt <- paste(createTableStmt, " IN ", dbname, ".", tbsp, sep = "")
-    } 
-	createTableStmt <- paste(createTableStmt, " CCSID ", idaGetAcceleratorEncoding(), sep="")
-	idaQuery(createTableStmt)
+  cols <- idaQuery("SELECT NAME,trim(COLTYPE) AS COLTYPE, LENGTH, SCALE FROM SYSIBM.SYSCOLUMNS WHERE TBNAME ='", asTableView,"' ORDER BY COLNO ASC")  
+  createTableStmt <- paste("CREATE TABLE ", tableName, " (", sep="")
+  for(i in 1:nrow(cols)) {
+    colType <- cols[i,"COLTYPE"]
+    if (colType == "VARBIN") colType <- "VARBINARY"
+    else if (colType == "VARG") colType <- "VARGRAPHIC"
+    else if (colType == "TIMESTMP") colType <- "TIMESTAMP"
+    else if (colType == "TIMESTZ") colType <- "TIMESTAMP WITH TIME ZONE"
+    
+    colDecl <- paste("\"", cols[i,"NAME"], "\" ", colType, sep="")
+    if ( colType %in% c("CHAR", "VARCHAR", "LONGVAR", "BINARY", "VARBINARY", "GRAPHIC", "VARGRAPHIC", "DECIMAL", "LONGVARG", "DECFLOAT") ) {
+      colDecl <- paste(colDecl, "(", cols[i,"LENGTH"], sep="")
+      if ( colType %in% c("DECIMAL") ) {
+        colDecl <- paste(colDecl, ", ", cols[i,"SCALE"], sep="")
+      }
+      colDecl <- paste(colDecl, ")", sep="")
+    }
+    if (i < nrow(cols)) {
+      colDecl <- paste(colDecl, ", ", sep="")
+    }
+    createTableStmt <- paste(createTableStmt, colDecl, sep="")
+  }
+  createTableStmt <- paste(createTableStmt, ")", sep="")	
+  if (asAOT) {
+    createTableStmt <- paste(createTableStmt, " IN ACCELERATOR ", idaGetAccelerator(), sep="")
+  } else if (dbname != "") {
+    if (!idaExistDatabase(dbname)) {
+      idaQuery("CREATE DATABASE ", dbname, " CCSID ", idaGetAcceleratorEncoding())	
+    }
+    tbsp <- idaGetValidTablespaceName()
+    idaQuery("CREATE TABLESPACE ", tbsp, " IN ", dbname, " CCSID ", idaGetAcceleratorEncoding())
+    createTableStmt <- paste(createTableStmt, " IN ", dbname, ".", tbsp, sep = "")
+  } 
+  createTableStmt <- paste(createTableStmt, " CCSID ", idaGetAcceleratorEncoding(), sep="")
+  idaQuery(createTableStmt)
 }
-  

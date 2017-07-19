@@ -25,9 +25,9 @@ ida.list <- function (type='public',user=NULL) {
   
   #Get current user
   if (idaIsDb2z()) {
-	currentUser <- idaScalarQuery("select trim(session_user) from sysibm.sysdummy1");
+    currentUser <- idaScalarQuery("select trim(session_user) from sysibm.sysdummy1");
   } else {
-	currentUser <- idaScalarQuery("select trim(current_user) from sysibm.sysdummy1");
+    currentUser <- idaScalarQuery("select trim(current_user) from sysibm.sysdummy1");
   }
   roleName <- idaCheckSharing()
   if(is.null(roleName)&&(type=='public')) {
@@ -46,7 +46,7 @@ ida.list <- function (type='public',user=NULL) {
         stop("Sharing R objects is not enabled on this platform.")
       }
       if(!idaExistTable(tableName)) {
-          createIdaListTable(tableName,'public',roleName)
+        createIdaListTable(tableName,'public',roleName)
       }
       if(!idaExistTable(tableNameMeta)) {
         createIdaListMetaTable(tableNameMeta,'public',roleName)
@@ -73,7 +73,7 @@ ida.list <- function (type='public',user=NULL) {
     } else {
       stop("The only types allowed are public and private")			
     }
-   
+    
     texists <- F
     try({idaQuery("SELECT COUNT(*) FROM ",tableName);texists<-T},silent=T)
     
@@ -87,7 +87,7 @@ ida.list <- function (type='public',user=NULL) {
 
 ################ Internal utilities ############################
 createIdaListTable <- function(tableName,type,roleName) {
-
+  
   idaQuery("CREATE TABLE ", tableName, " (OBJID VARCHAR(2000), SID INTEGER, SNIPPET VARCHAR(30000))");
   if(type=='public') {
     idaQuery("GRANT SELECT ON ",tableName," TO ",roleName);
@@ -106,49 +106,49 @@ createIdaListMetaTable <- function(tableName,type,roleName) {
 
 ################ Methods ############################
 setMethod("[", signature(x = "ida.list"),
-    function(x, i) {
-      ida.getObj(i,x@tableName);
-    }
+          function(x, i) {
+            ida.getObj(i,x@tableName);
+          }
 )
 
 setMethod("$", signature(x = "ida.list"),
-    function(x, name) {
-      ida.getObj(name,x@tableName);
-    }
+          function(x, name) {
+            ida.getObj(name,x@tableName);
+          }
 )
 
 setMethod("[<-", signature(x = "ida.list"),
-    function(x, i,value) {
-      ida.storeObj(i,value,x@tableName)
-      x;
-    }
+          function(x, i,value) {
+            ida.storeObj(i,value,x@tableName)
+            x;
+          }
 )
 
 setMethod("$<-", signature(x = "ida.list"),
-    function(x, name,value) {
-      ida.storeObj(name,value,x@tableName)
-      x;
-    }
+          function(x, name,value) {
+            ida.storeObj(name,value,x@tableName)
+            x;
+          }
 )
 
 setMethod("length", signature(x="ida.list"),
-    function(x) { return(idaQuery("select count(distinct OBJID) from ",x@tableName)[[1]][1]) }
+          function(x) { return(idaQuery("select count(distinct OBJID) from ",x@tableName)[[1]][1]) }
 )
 
 setMethod("names", signature(x="ida.list"),
-    function(x) { return(idaQuery("select distinct OBJID from ",x@tableName)[[1]]) }
+          function(x) { return(idaQuery("select distinct OBJID from ",x@tableName)[[1]]) }
 )
 
 setMethod("print", signature(x="ida.list"),
-    function (x) {
-      cat(x@tableName,"\n")
-    }
+          function (x) {
+            cat(x@tableName,"\n")
+          }
 )
 
 setMethod("show", signature(object="ida.list"),
-    function (object) {
-      cat(object@tableName,"\n")		
-    }
+          function (object) {
+            cat(object@tableName,"\n")		
+          }
 )
 
 is.ida.list <- function(x) {
@@ -163,36 +163,36 @@ ida.storeObj <- function(id, obj, tableName,tableNameMeta=paste(tableName,"_META
   odbcSetAutoCommit(get("p_idaConnection",envir=idaRGlobal), autoCommit = FALSE)
   
   tryCatch({
-        
-        #Delete any object with the same key if exists
-        ida.delObj(id,tableName);
-        
-        if(!is.null(obj)) {
-          objStr <- rawToChar(serialize(obj, ascii=TRUE,connection=NULL),multiple=FALSE);
-          offset <-0;
-          maxSnippetSize <- 29000;
-          numSnippets <- nchar(objStr)/maxSnippetSize;
-          count <- -floor(numSnippets);
-          
-          while(count<=0){
-            objStrSnippet <- substring(objStr,offset,offset+maxSnippetSize-1);
-            idaQuery("INSERT INTO ", tableName," VALUES( '", id, "',", count, ",'", objStrSnippet,"')");
-            count <- count+1;
-            offset<-offset+maxSnippetSize;
-          }
-          #Get the class and make sure it will fit 
-          classStr <- substr(as.character(class(obj)),1,1000);
-         
-          idaQuery("INSERT INTO ", tableNameMeta," VALUES('", id,"',",max(c(1,as.integer(as.numeric(object.size(obj))/1024.0))),",'", as.character(date()),"','",classStr,"')");
-        }
-        
-        #If all goes well, commit
-        odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = TRUE);
-      },
-      #In cse of error, rollback
-      error=function(e){print(e);odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = FALSE)},
-      #In any case, turn autocommit on again
-      finally={odbcSetAutoCommit(get("p_idaConnection",envir=idaRGlobal), autoCommit = TRUE)});
+    
+    #Delete any object with the same key if exists
+    ida.delObj(id,tableName);
+    
+    if(!is.null(obj)) {
+      objStr <- rawToChar(serialize(obj, ascii=TRUE,connection=NULL),multiple=FALSE);
+      offset <-0;
+      maxSnippetSize <- 29000;
+      numSnippets <- nchar(objStr)/maxSnippetSize;
+      count <- -floor(numSnippets);
+      
+      while(count<=0){
+        objStrSnippet <- substring(objStr,offset,offset+maxSnippetSize-1);
+        idaQuery("INSERT INTO ", tableName," VALUES( '", id, "',", count, ",'", objStrSnippet,"')");
+        count <- count+1;
+        offset<-offset+maxSnippetSize;
+      }
+      #Get the class and make sure it will fit 
+      classStr <- substr(as.character(class(obj)),1,1000);
+      
+      idaQuery("INSERT INTO ", tableNameMeta," VALUES('", id,"',",max(c(1,as.integer(as.numeric(object.size(obj))/1024.0))),",'", as.character(date()),"','",classStr,"')");
+    }
+    
+    #If all goes well, commit
+    odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = TRUE);
+  },
+  #In cse of error, rollback
+  error=function(e){print(e);odbcEndTran(get("p_idaConnection",envir=idaRGlobal), commit = FALSE)},
+  #In any case, turn autocommit on again
+  finally={odbcSetAutoCommit(get("p_idaConnection",envir=idaRGlobal), autoCommit = TRUE)});
 }
 
 ida.delObj <- function(id, tableName,tableNameMeta=paste(tableName,"_META",sep='')) {

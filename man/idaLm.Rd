@@ -39,7 +39,7 @@ lmgON = FALSE, backwardON = FALSE, ...)
 	The specified columns can contain continuous or categorical values. 
 	The specified formula cannot contain transformations.}
     \item{idadf}{An ida.data.frame that contains the input data for the function.}
-	\item{id}{The name of the column that contains a unique ID for each row of the input data.}
+	\item{id}{The name of the column that contains a unique ID for each row of the input data. An id column needs to be specified, if a model contains categorical values, more than 41 columns or when dropModel is set to FALSE. If no valid id column was specified, a temporary id column will be used (not for DB2 for z/OS).}
     \item{modelname}{Name of the model that will be created in the database.}
  %   \item{storeCovMat}{logical: Indicates whether the covariance Matrix shall be stored in a Table and in the R object.}
     \item{dropModel}{logical: If TRUE the in database model will be dropped after the calculation.}
@@ -152,7 +152,7 @@ lm1 <- idaLm(SepalLength~., idf)
 library(ggplot2)
 plot(lm1)
 
-#Calculate linear model with more than 46 columns requires an id column
+#Calculating linear models with categorical values requires an id column
 lm1 <- idaLm(SepalLength~., idf, id="ID")
 }
 }

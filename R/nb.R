@@ -34,10 +34,10 @@ idaNaiveBayes <- function(form, data, id="id", modelname=NULL) {
     
     xx <- parseTableName(modelname);
     if (idaIsDb2z()) {
-		model <- paste('"',xx$table,'"',sep=''); 	
-	} else {
-		model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
-	}
+      model <- paste('"',xx$table,'"',sep=''); 	
+    } else {
+      model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
+    }
   }
   
   
@@ -51,16 +51,16 @@ idaNaiveBayes <- function(form, data, id="id", modelname=NULL) {
   id  <- paste('"',id,'"',sep='');
   
   tryCatch({
-        callSP("NAIVEBAYES", model=model, intable=tmpView, id=id, target=varY)
-      }, error = function(e, tmpView) {
-        # in case of error, drop view and let user know, what happend
-        stop(e)
-      }, finally = {
-        # drop view
-        idaDropView(tmpView)
-      }
+    callSP("NAIVEBAYES", model=model, intable=tmpView, id=id, target=varY)
+  }, error = function(e, tmpView) {
+    # in case of error, drop view and let user know, what happend
+    stop(e)
+  }, finally = {
+    # drop view
+    idaDropView(tmpView)
+  }
   )
- 
+  
   result <- idaRetrieveNBModel(model)
   
   return(result)
@@ -79,34 +79,34 @@ idaRetrieveNBModel <- function(modelName) {
   discColList <- "COLNAME, BREAK "
   splits.rcv <- NULL
   if(idaIsDb2z()) {     
-	exportModelTable <- idaGetValidTableName(prefix = "IDAR_MODEL_TABLE_")
-	tryCatch({	
-        res <- callSP("EXPORT_MODEL_TO_TABLE",
-            			model=modelName,
-            			outtable=exportModelTable)
-		model2 <- paste('SELECT ', modelColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Model\'',sep="")
-		nbOut <- idaQuery(model2)
-		# read the DISC model columns if they exist 
-		if (idaExistColumnInTable("BREAK", exportModelTable)) {
-			splits.rcv <- idaQuery(paste('SELECT ', discColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'DiscRanges\'',sep=""))
-		}	
-      }, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-      }, finally = {
-        idaDeleteTable(exportModelTable)
-      }
-	) 
+    exportModelTable <- idaGetValidTableName(prefix = "IDAR_MODEL_TABLE_")
+    tryCatch({	
+      res <- callSP("EXPORT_MODEL_TO_TABLE",
+                    model=modelName,
+                    outtable=exportModelTable)
+      model2 <- paste('SELECT ', modelColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Model\'',sep="")
+      nbOut <- idaQuery(model2)
+      # read the DISC model columns if they exist 
+      if (idaExistColumnInTable("BREAK", exportModelTable)) {
+        splits.rcv <- idaQuery(paste('SELECT ', discColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'DiscRanges\'',sep=""))
+      }	
+    }, error = function(e) {
+      # in case of error, let user know what happend
+      stop(e)
+    }, finally = {
+      idaDeleteTable(exportModelTable)
+    }
+    ) 
   } else { 
     model2 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_MODEL"',sep="")
     nbOut <- idaQuery(model2); 
     # read the DISC model table if it exists 
     disc.name <- paste('"',modelSchema,'"."',model,'_DISC"',sep="")
     if (idaExistTable(disc.name)) {
-		splits.rcv <- idaQuery(paste('SELECT * FROM "',modelSchema,'"."',model,'_DISC"',sep=""))
-	}
+      splits.rcv <- idaQuery(paste('SELECT * FROM "',modelSchema,'"."',model,'_DISC"',sep=""))
+    }
   }
-	
+  
   nbOut$CLASSVALCOUNT <- as.numeric(nbOut$CLASSVALCOUNT)
   nbOut$ATTRCLASSCOUNT <- as.numeric(nbOut$ATTRCLASSCOUNT)
   nbOut$CLASSCOUNT <- as.numeric(nbOut$CLASSCOUNT)
@@ -117,7 +117,7 @@ idaRetrieveNBModel <- function(modelName) {
   attribute <- "ATTRIBUTE"
   classvalcount <- "CLASSVALCOUNT"
   attrclasscount <- "ATTRCLASSCOUNT"	
-   
+  
   colname <- "COLNAME"
   totalcount <- "TOTALCOUNT"
   
@@ -140,7 +140,7 @@ idaRetrieveNBModel <- function(modelName) {
     tables[[i]] <- tab
     names(tables)[i] <- xVar
   }
- 
+  
   # check if there are automatically made splits for continuous values
   # tb: replaced "classes" by "cols"
   if (!is.null(splits.rcv)) {
@@ -187,7 +187,7 @@ predict.idaNaiveBayes <- function(object, newdata, id, withProbabilities=FALSE, 
   outtable <- args[["outtable"]]
   outtableprob <-args[["outtableprob"]]
   if (is.null(outtable) || outtable == "") {
-  	outtable <- idaGetValidTableName(paste("PREDICT_",sep=""))
+    outtable <- idaGetValidTableName(paste("PREDICT_",sep=""))
   }
   
   colu = newData@cols
@@ -198,71 +198,71 @@ predict.idaNaiveBayes <- function(object, newdata, id, withProbabilities=FALSE, 
   tmpView <- idaCreateView(newData)
   
   tryCatch({
-  	if (withProbabilities) {
-  		if (is.null(outtableprob) || outtableprob == "") {
-  			probTable <- idaGetValidTableName(paste("PROBTABLE_",sep=""))		
-  		} else {
-  			probTable <- outtableprob
-  		}
-  				
-  		outtable2 <- idaGetValidTableName(paste("PREDICT_",sep=""))			
-        callSP("PREDICT_NAIVEBAYES",
-              model=object$model,
-              intable=tmpView,
-              id=id,
-              outtableprob=probTable,
-              outtable=outtable2,
-              ...);
- 	} else {
- 		 callSP("PREDICT_NAIVEBAYES",
-              model=object$model,
-              intable=tmpView,
-              id=id,
-              outtable=outtable,
-              ...); 
+    if (withProbabilities) {
+      if (is.null(outtableprob) || outtableprob == "") {
+        probTable <- idaGetValidTableName(paste("PROBTABLE_",sep=""))		
+      } else {
+        probTable <- outtableprob
+      }
+      
+      outtable2 <- idaGetValidTableName(paste("PREDICT_",sep=""))			
+      callSP("PREDICT_NAIVEBAYES",
+             model=object$model,
+             intable=tmpView,
+             id=id,
+             outtableprob=probTable,
+             outtable=outtable2,
+             ...);
+    } else {
+      callSP("PREDICT_NAIVEBAYES",
+             model=object$model,
+             intable=tmpView,
+             id=id,
+             outtable=outtable,
+             ...); 
     }                
-   }, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-   }, finally = {
-        # drop view
-        idaDropView(tmpView)
-   }
+  }, error = function(e) {
+    # in case of error, let user know what happend
+    stop(e)
+  }, finally = {
+    # drop view
+    idaDropView(tmpView)
+  }
   )
   
   if (withProbabilities) {
- 	tryCatch({
-  		outview <- idaGetValidTableName(paste("PREDICT_VIEW_",sep=""))
-  		createViewStmt <- paste("CREATE VIEW ", outview, " AS WITH AGGPROB(", id, ", SUMPROB) AS (SELECT ", id, ", SUM(PROB) AS SUMPROB FROM ", 
-  								probTable, " GROUP BY ", id, ")", sep = "")
-  		selectClause <- paste(" SELECT o.", id, ", o.CLASS", sep = "")
-  		fromClause <- paste(" FROM ", outtable2, " o, AGGPROB a", sep="")
-  		whereClause1 <- paste(" WHERE o.", id, "=a.", id, " AND a.", id, "=", sep="") 						 
-		whereClause2 <- ""
-  		for(i in 1:length(object$level)) {
-  			classValue <- object$level[i]
-  			selectClause <- paste(selectClause, ", pb", i, ".PROB/SUMPROB  AS \"", classValue, "\"", sep="")
-  			fromClause <- paste(fromClause, ", ", probTable, " pb", i, sep="")
-  			whereClause1 <- paste(whereClause1, "pb", i, ".", id, sep="")
-  			if(i<length(object$level)) {
-  				whereClause1 <- paste(whereClause1, " AND pb", i, ".", id, "=", sep="")
-  			} 			
-  			whereClause2 <- paste(whereClause2, " AND pb", i, ".CLASS='", classValue, "'", sep="")  
-  		}
-  		createViewStmt <- paste(createViewStmt, selectClause, fromClause, whereClause1, whereClause2, sep="")
-  		idaQuery(createViewStmt)
-  		idaMaterialize(ida.data.frame(outview), outtable, asAOT=TRUE)	
-   	}, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-   	}, finally = {
-        # drop view
-        idaDropView(outview)
-        idaDeleteTable(outtable2)
-        if (is.null(outtableprob) || outtableprob == "") {
-			idaDeleteTable(probTable)
-        }
-   	})
+    tryCatch({
+      outview <- idaGetValidTableName(paste("PREDICT_VIEW_",sep=""))
+      createViewStmt <- paste("CREATE VIEW ", outview, " AS WITH AGGPROB(", id, ", SUMPROB) AS (SELECT ", id, ", SUM(PROB) AS SUMPROB FROM ", 
+                              probTable, " GROUP BY ", id, ")", sep = "")
+      selectClause <- paste(" SELECT o.", id, ", o.CLASS", sep = "")
+      fromClause <- paste(" FROM ", outtable2, " o, AGGPROB a", sep="")
+      whereClause1 <- paste(" WHERE o.", id, "=a.", id, " AND a.", id, "=", sep="") 						 
+      whereClause2 <- ""
+      for(i in 1:length(object$level)) {
+        classValue <- object$level[i]
+        selectClause <- paste(selectClause, ", pb", i, ".PROB/SUMPROB  AS \"", classValue, "\"", sep="")
+        fromClause <- paste(fromClause, ", ", probTable, " pb", i, sep="")
+        whereClause1 <- paste(whereClause1, "pb", i, ".", id, sep="")
+        if(i<length(object$level)) {
+          whereClause1 <- paste(whereClause1, " AND pb", i, ".", id, "=", sep="")
+        } 			
+        whereClause2 <- paste(whereClause2, " AND pb", i, ".CLASS='", classValue, "'", sep="")  
+      }
+      createViewStmt <- paste(createViewStmt, selectClause, fromClause, whereClause1, whereClause2, sep="")
+      idaQuery(createViewStmt)
+      idaMaterialize(ida.data.frame(outview), outtable, asAOT=TRUE)	
+    }, error = function(e) {
+      # in case of error, let user know what happend
+      stop(e)
+    }, finally = {
+      # drop view
+      idaDropView(outview)
+      idaDeleteTable(outtable2)
+      if (is.null(outtableprob) || outtableprob == "") {
+        idaDeleteTable(probTable)
+      }
+    })
   }   	 
   object.pred <- ida.data.frame(outtable)
   return(object.pred)

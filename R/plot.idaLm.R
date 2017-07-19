@@ -14,8 +14,9 @@
 # You should have received a copy of the GNU General Public License 
 # along with this program. If not, see <http://www.gnu.org/licenses/>. 
 #
+
 plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NULL,
-                     lmgON = FALSE, backwardON = FALSE, ...){
+                       lmgON = FALSE, backwardON = FALSE, ...){
   
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("ggplot2 is required to plot idaLm objects.")
@@ -58,7 +59,7 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
   if(rownames(mat)[nrowMat] != "Intercept"){
     stop("Plotting a model without intercept is currently not supported.")
   }else{  
-   n = mat[nrowMat, nrowMat]
+    n = mat[nrowMat, nrowMat]
   }
   
   card <- idaLm$card
@@ -73,10 +74,10 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
       delcard <- card[!(colNames %in% order)]
       #we use the ":" function to create a vector for all indices that belong to one predictor
       deletecols <- unlist(mapply(FUN = function(x, y){do.call(":",list(x-y+1,x))}, lastcol, delcard))
-        
+      
       card <- card[colNames %in% order]
       mat <- mat[-deletecols, -deletecols]
-     
+      
       colNames <- names(card)
     }else{
       error <- "Some of the Attributes of the vector are not in the model:"
@@ -90,8 +91,8 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
   XTY = mat[1, -1]
   
   nomCols <- names(card)[card > 1]
-
-#################Function that calculates relative Importance################
+  
+  #################Function that calculates relative Importance################
   getRelImp <- function(colNames, card, nomCols, numrow, XTX, XTY, YTY, order, lmgON,
                         backwardON){
     #This function gives us more Information about the impact of the attributes on the
@@ -108,7 +109,7 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
     
     SXY[1, nrowXTX] <- 0 #Intercept is constant so this is always zero
     SXY <- SXY / Var_y    #Here we divide by Var_y
-        
+    
     #R2 gives the value of the model and is between 0(bad) and 1(good).
     #Calculating R2 is [sum ((predicted yvalue) - mean_y)^2 ]/[sum (y-mean_y)^2]
     #Calculation formula with the Covariance matrix. (XTX)^-1 %*% XTY are the coefficients
@@ -128,9 +129,9 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
     if(length(colNames) < 2){
       
       if(is.vector(order)){
-          res <- data.frame(totalR2)
-          names(res) <- c('Model_Values')
-          rownames(res) <- order
+        res <- data.frame(totalR2)
+        names(res) <- c('Model_Values')
+        rownames(res) <- order
       }else{     
         if(backwardON){
           res <- data.frame(0)
@@ -157,25 +158,25 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
       R2 <- c()
       First <- c()
       disposition <- 0
-
+      
       for(i in 1:length(colNames)){         
-            length <- card[colNames[i]]-1
-            tempPos <- (i+disposition) : (i+disposition+length)
-            posofAttr[[colNames[i]]] <- tempPos
-            
-            lastXTX <- XTX[-tempPos, -tempPos]
-            lastXTY <- XTY[-tempPos]
-            lastSXY <- SXY[1, -tempPos]
-            R2 <- c(R2, calc(lastSXY, lastXTX, lastXTY))
-            
-            firstXTX <- XTX[c(tempPos, nrowXTX), c(tempPos, nrowXTX)]
-            firstXTY <- XTY[c(tempPos, nrowXTX)]
-            firstSXY <- SXY[1, c(tempPos, nrowXTX)]            
-            First <- c(First, calc(firstSXY, firstXTX, firstXTY))
-            
-            disposition <- disposition + length
+        length <- card[colNames[i]]-1
+        tempPos <- (i+disposition) : (i+disposition+length)
+        posofAttr[[colNames[i]]] <- tempPos
+        
+        lastXTX <- XTX[-tempPos, -tempPos]
+        lastXTY <- XTY[-tempPos]
+        lastSXY <- SXY[1, -tempPos]
+        R2 <- c(R2, calc(lastSXY, lastXTX, lastXTY))
+        
+        firstXTX <- XTX[c(tempPos, nrowXTX), c(tempPos, nrowXTX)]
+        firstXTY <- XTY[c(tempPos, nrowXTX)]
+        firstSXY <- SXY[1, c(tempPos, nrowXTX)]            
+        First <- c(First, calc(firstSXY, firstXTX, firstXTY))
+        
+        disposition <- disposition + length
       }
-
+      
       names(First) <- colNames
       Usefulness <- totalR2-R2 #Compare how much information/improvement each variable has
       names(R2) <- colNames
@@ -191,7 +192,7 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
         swap <- tempcolNames[1]
         tempcolNames[1] <- names(StartingVal)[bestpos]
         tempcolNames[bestpos] <- swap    
-                
+        
         indices <- posofAttr[[tempcolNames[1]]]
         
         #Adds the Intercept line to the Subset of the covariance Matrix we are looking at
@@ -304,7 +305,7 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
               }
             }
           }
-
+          
           #preparing for the next step
           dataold <- datanew
           valold <- valnew
@@ -313,7 +314,7 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
         #So we divide by the number of Permutations: factorial(NrAttr)
         lmgRes <- lmgRes/(factorial(NrAttr))
         lmgRes <- data.frame(lmgRes)
-
+        
         lmgRes #Has the same order as the Attributes in the covariance matrix.
       }
       
@@ -344,9 +345,9 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
       #Sanity check if order is a vector with attributes that belong to the model.
       #Then it will calculate order,backward or forward depending on parameters
       if(is.vector(order)){
-          res <- as.data.frame(orderfct(order, posofAttr, XTX, XTY, SXY, nrowXTX, First))
-          names(res) <- c('Model_Values')
-          rownames(res) <- order
+        res <- as.data.frame(orderfct(order, posofAttr, XTX, XTY, SXY, nrowXTX, First))
+        names(res) <- c('Model_Values')
+        rownames(res) <- order
       }else{
         if(backwardON){
           backward <- stepbystep(R2, posofAttr, SXY, XTX, XTY, max_forw = max_forw, direction = "backward")
@@ -360,14 +361,14 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
           rownames(res) <- forward[, 1]
         }
       }
-  
+      
       if(lmgON){
         lmgval <- lmg(posofAttr, First, SXY, XTX, XTY)
       }
       
       #Order First and Usefulness into the order given by forward (or backward or order)
       neworder <- match(rownames(res), names(First))
-    
+      
       First <- First[neworder]
       Usefulness <- Usefulness[neworder]
       
@@ -382,7 +383,7 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
       res2
     }
   }
-
+  
   ###################Calling getRelImp############################
   if(lmgON){
     if(length(colNames) > 15){
@@ -390,113 +391,113 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
     }
   }
   tryCatch({
-  relImp=getRelImp(colNames, card, nomCols, n, XTX, XTY, YTY, order, lmgON, backwardON)
+    relImp=getRelImp(colNames, card, nomCols, n, XTX, XTY, YTY, order, lmgON, backwardON)
   }, error = function(e){stop(e)})
-
   
-###################Creating the Plot################################
-    plot3 <- function(relImp, max_plot, names){
-      reshaped <- relImp
-      ModelVal <- colnames(reshaped)[1]
-      
-      reshaped$Attributes <- rownames(relImp)
-      max_plot <- min(nrow(reshaped), max_plot)
-      reshaped <- reshaped[1:max_plot, ]
-      
-      reshaped <- reshaped[, c('Attributes', 'Usefulness', 'First', ModelVal)]
-      
-      
-      if(!names){
-        reshaped$Attributes <- as.character(1:nrow(reshaped))
-        reshaped$Attributes <- factor(reshaped$Attributes, levels = reshaped$Attributes)
-      }else{
-        reshaped$Attributes <- factor(reshaped$Attributes, levels = reshaped$Attributes)
-        reshaped <- reshaped[1:nrow(reshaped), ]
-      }
-      
-      #Using reshape function to switch table from wide to narrow format
-      reshaped <- reshape(reshaped, varying=c( ModelVal, 'First', 'Usefulness'), 
-                          v.names = c('Explanation'), direction="long")
-      #A way to change the names in the Legend
-      reshaped$time[reshaped$time == 1] <- 'Model_Value'
-      reshaped$time[reshaped$time == 2] <- 'First'
-      reshaped$time[reshaped$time == 3] <- 'Usefulness'
-     
-      #Change to factor so ggplot2 will not order it alphabetically
-      reshaped$time <- factor(reshaped$time)
-      
-      
-      #workaround some bug where another device was still open so the plot was not printed
-      #close all devices.
-      #try({graphics.off()}, silent=TRUE) #too destructive
-      
-      #Print plot into png
-      png(filename = "RelImpPlot.png")
-      plot1 <- ggplot(reshaped, aes_string(x = 'Attributes', y = 'Explanation', fill = "time",
-                                           width=0.4)) +
-              scale_x_discrete(expand=c(0.1,0))+
-              scale_fill_manual(values=c("#B42600", "#033676", "#E7C500"),
-                                breaks=c("Model_Value","First",  "Usefulness"),
-                                c('Model_Value', 'First', 'Usefulness'))+
-              geom_bar(stat = "identity", position = "identity")+
-              guides(fill = guide_legend(reverse = FALSE, title = NULL))
-      
-      if(names == TRUE){
-        plot1 <- plot1 + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-      }
-
-      print(plot1)
-      dev.off()
-      print(plot1)
-
-      if(!names){  
-        name_df <- as.data.frame(rownames(relImp[1:max_plot, ]))
-        names(name_df) <- c('Attributes')
-        cat("The order of the attributes in the plot is:\n")
-        print(name_df)
-      }
-    }
-    ############plot the lmg values if lmgON=TRUE############
-    plotlmg <- function(relImp, max_plot, names){
-      max_plot <- min(max_plot, nrow(relImp))
-      data <- relImp
-      data$Attributes <- rownames(relImp)
-      data$Explanation <- relImp$LMG
-      data <- data[1:max_plot, ]
-      if(!names){
-        data$Attributes <- as.character(1:nrow(data))
-        data$Attributes <- factor(data$Attributes, data$Attributes)
-      }else{
-        data$Attributes <- factor(data$Attributes, data$Attributes)
-        data <- data[1:nrow(data), ]
-      }
-      #try({graphics.off()}, silent=TRUE) #too destructive
-      png(filename="RelImpPlot.png")
-      plot1 <- ggplot(data, aes_string(x = 'Attributes', y = 'Explanation')) + 
-        geom_bar(stat = "identity", fill="#FF6F00", width=0.4)+
-        scale_x_discrete(expand=c(0.1,0))
-       
-      if(names == TRUE){
-       plot1 <- plot1 + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-      }
-      print(plot1)
-      dev.off()
-      print(plot1)
-      
-      if(!names){  
-        name_df <- as.data.frame(rownames(relImp[1:max_plot, ]))
-        names(name_df) <- c('Attribute')
-        cat("Die Attribute im Plot haben die folgende Reihenfolge:\n")
-        print(name_df)
-      }
-    }
   
-    relImp[relImp > 1] <- 1
-    relImp[relImp < 0] <- 0
-    if(lmgON){
-      plotlmg(relImp, max_plot, names)
+  ###################Creating the Plot################################
+  plot3 <- function(relImp, max_plot, names){
+    reshaped <- relImp
+    ModelVal <- colnames(reshaped)[1]
+    
+    reshaped$Attributes <- rownames(relImp)
+    max_plot <- min(nrow(reshaped), max_plot)
+    reshaped <- reshaped[1:max_plot, ]
+    
+    reshaped <- reshaped[, c('Attributes', 'Usefulness', 'First', ModelVal)]
+    
+    
+    if(!names){
+      reshaped$Attributes <- as.character(1:nrow(reshaped))
+      reshaped$Attributes <- factor(reshaped$Attributes, levels = reshaped$Attributes)
     }else{
-      plot3(relImp, max_plot, names)
+      reshaped$Attributes <- factor(reshaped$Attributes, levels = reshaped$Attributes)
+      reshaped <- reshaped[1:nrow(reshaped), ]
     }
-  relImp#Returns the Results of the Importance Calculation
+    
+    #Using reshape function to switch table from wide to narrow format
+    reshaped <- reshape(reshaped, varying=c( ModelVal, 'First', 'Usefulness'), 
+                        v.names = c('Explanation'), direction="long")
+    #A way to change the names in the Legend
+    reshaped$time[reshaped$time == 1] <- 'Model_Value'
+    reshaped$time[reshaped$time == 2] <- 'First'
+    reshaped$time[reshaped$time == 3] <- 'Usefulness'
+    
+    #Change to factor so ggplot2 will not order it alphabetically
+    reshaped$time <- factor(reshaped$time)
+    
+    
+    #workaround some bug where another device was still open so the plot was not printed
+    #close all devices.
+    #try({graphics.off()}, silent=TRUE) #too destructive
+    
+    #Print plot into png
+    png(filename = "RelImpPlot.png")
+    plot1 <- ggplot(reshaped, aes_string(x = 'Attributes', y = 'Explanation', fill = "time",
+                                         width=0.4)) +
+      scale_x_discrete(expand=c(0.1,0))+
+      scale_fill_manual(values=c("#B42600", "#033676", "#E7C500"),
+                        breaks=c("Model_Value","First",  "Usefulness"),
+                        c('Model_Value', 'First', 'Usefulness'))+
+      geom_bar(stat = "identity", position = "identity")+
+      guides(fill = guide_legend(reverse = FALSE, title = NULL))
+    
+    if(names == TRUE){
+      plot1 <- plot1 + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+    }
+    
+    print(plot1)
+    dev.off()
+    print(plot1)
+    
+    if(!names){  
+      name_df <- as.data.frame(rownames(relImp[1:max_plot, ]))
+      names(name_df) <- c('Attributes')
+      cat("The order of the attributes in the plot is:\n")
+      print(name_df)
+    }
+  }
+  ############plot the lmg values if lmgON=TRUE############
+  plotlmg <- function(relImp, max_plot, names){
+    max_plot <- min(max_plot, nrow(relImp))
+    data <- relImp
+    data$Attributes <- rownames(relImp)
+    data$Explanation <- relImp$LMG
+    data <- data[1:max_plot, ]
+    if(!names){
+      data$Attributes <- as.character(1:nrow(data))
+      data$Attributes <- factor(data$Attributes, data$Attributes)
+    }else{
+      data$Attributes <- factor(data$Attributes, data$Attributes)
+      data <- data[1:nrow(data), ]
+    }
+    #try({graphics.off()}, silent=TRUE) #too destructive
+    png(filename="RelImpPlot.png")
+    plot1 <- ggplot(data, aes_string(x = 'Attributes', y = 'Explanation')) + 
+      geom_bar(stat = "identity", fill="#FF6F00", width=0.4)+
+      scale_x_discrete(expand=c(0.1,0))
+    
+    if(names == TRUE){
+      plot1 <- plot1 + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+    }
+    print(plot1)
+    dev.off()
+    print(plot1)
+    
+    if(!names){  
+      name_df <- as.data.frame(rownames(relImp[1:max_plot, ]))
+      names(name_df) <- c('Attribute')
+      cat("Die Attribute im Plot haben die folgende Reihenfolge:\n")
+      print(name_df)
+    }
+  }
+  
+  relImp[relImp > 1] <- 1
+  relImp[relImp < 0] <- 0
+  if(lmgON){
+    plotlmg(relImp, max_plot, names)
+  }else{
+    plot3(relImp, max_plot, names)
+  }
+  relImp #Returns the Results of the Importance Calculation
 }

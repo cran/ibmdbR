@@ -1,5 +1,3 @@
-if(!nzchar(Sys.getenv("IBMDBR_TESTING"))) q("no")
-
 #The runone function was copied from the package RODBC 
 runone <- function(f)
 {
@@ -25,9 +23,12 @@ runone <- function(f)
   0L
 }
 
-if(Sys.getenv("IBMDBR_TESTING")=="DASHDB") {
-  runone("dashdb")
-} else {
-  runone("db2")
-}
+runone("common")
 
+if(nzchar(Sys.getenv("IBMDBR_TESTING"))) {
+  if(Sys.getenv("IBMDBR_TESTING")=="DB2WAREHOUSE") {
+    runone("db2warehouse")
+  } else {
+    runone("db2")
+  }
+}

@@ -18,23 +18,23 @@
 ############## General ######################
 
 setMethod("print", signature(x="ida.col.def"),
-    function (x) {
-      cat(paste("Column definition: ", x@term, " base table: ",x@table@table ," \n Use this to define new columns on a ida.data.frame using the $ operator. To select a subset of a table, use idadf[] notation. "),"\n")
-    }
+          function (x) {
+            cat(paste("Column definition: ", x@term, " base table: ",x@table@table ," \n Use this to define new columns on a ida.data.frame using the $ operator. To select a subset of a table, use idadf[] notation. "),"\n")
+          }
 )
 
 setMethod("show", signature(object="ida.col.def"),
-    function (object) {
-      cat(paste("Column definition: ", object@term, " base table: ",object@table@table ," \n Use this to define new columns on a ida.data.frame using the $ operator. To select a subset of a table, use idadf[] notation. "),"\n")
-    }
+          function (object) {
+            cat(paste("Column definition: ", object@term, " base table: ",object@table@table ," \n Use this to define new columns on a ida.data.frame using the $ operator. To select a subset of a table, use idadf[] notation. "),"\n")
+          }
 )
 
 
 setMethod("as.vector", signature(x="ida.col.def"),
-    function (x,mode="any") {
-      res <- idaQuery("SELECT ", x@term , " FROM ",x@table@table,ifelse(nchar(x@table@where), paste(" WHERE ", x@table@where), ""))
-      return(res[[1]])
-    }
+          function (x,mode="any") {
+            res <- idaQuery("SELECT ", x@term , " FROM ",x@table@table,ifelse(nchar(x@table@where), paste(" WHERE ", x@table@where), ""))
+            return(res[[1]])
+          }
 )
 
 
@@ -54,12 +54,12 @@ as.ida.col.def <- function(x) {
 
 ################ Aggregate functions ############################
 
-setIdaAggFunct <- function(aggFunct,sqlAggFunct=aggFunct) {
+setIdaAggFunct <- function(aggFunct, sqlAggFunct=aggFunct) {
   setMethod(aggFunct,signature(x='ida.col.def'),function (x) {
-        checkLogical(F,x);
-        checkAggregation(x)
-        return(new(Class="ida.col.def",term=paste(sqlAggFunct,'(',as.ida.col.def(x),')',sep=''),table=x@table,type="expr",aggType="simple"));
-      });
+    checkLogical(F,x);
+    checkAggregation(x)
+    return(new(Class="ida.col.def",term=paste(sqlAggFunct,'(',as.ida.col.def(x),')',sep=''),table=x@table,type="expr",aggType="simple"));
+  });
 }
 
 setIdaAggFunct("mean","AVG")
@@ -85,7 +85,7 @@ format.ida.col.def <- function(x, format, ...){
   type <- type[match(substr(x@term, 2, nchar(x@term)-1), type$COLNAME), 2]
   if( type %in% c("TIMESTAMP", "TIME") && format %in% c("%h", "%min", "%s")){
     
-     if(format == "%h"){
+    if(format == "%h"){
       x@term <- paste0("HOUR(", x@term, ")")
     }else if(format == "%min"){
       x@term <- paste0("MINUTE(", x@term, ")")
@@ -96,7 +96,7 @@ format.ida.col.def <- function(x, format, ...){
   }
   
   if(type %in% c("TIMESTAMP", "DATE") && format %in% c("%d", "%m", "%y")){
-  
+    
     if(format == "%d"){
       x@term <- paste0("DAY(", x@term, ")")
     }else if(format == "%m"){
@@ -108,7 +108,7 @@ format.ida.col.def <- function(x, format, ...){
   }else{
     stop("Column type is not TIME, TIMESTAMP, DATE or format is not: %h, %min, %s, %d, %m ,%y.")
   }
- 
+  
 }
 
 ################ Arithmetic operators ############################
@@ -117,40 +117,40 @@ setIdaGenericOp <- function(op,sqlFunct=NULL,requireLogical=F,outputLogical=F) {
   
   if(is.null(sqlFunct)) {
     setMethod(op,signature(e1="ida.col.def"),function (e1, e2) {
-          checkSameTable(e1,e2);
-          checkLogical(F,e1,e2);
-          return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),op,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="expr",aggType=aggType(e1,e2)));
-        });
+      checkSameTable(e1,e2);
+      checkLogical(F,e1,e2);
+      return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),op,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="expr",aggType=aggType(e1,e2)));
+    });
     
     setMethod(op,signature(e1="ida.col.def",e2="ida.col.def"),function (e1, e2) {
-          checkSameTable(e1,e2);
-          checkLogical(F,e1,e2);
-          return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),op,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="expr",aggType=aggType(e1,e2)));
-        });
+      checkSameTable(e1,e2);
+      checkLogical(F,e1,e2);
+      return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),op,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="expr",aggType=aggType(e1,e2)));
+    });
     
     setMethod(op,signature(e2="ida.col.def"),function (e1, e2) {
-          checkSameTable(e1,e2);
-          checkLogical(F,e1,e2);
-          return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),op,as.ida.col.def(eval(e2)),')',sep=''),table=e2@table,type="expr",aggType=aggType(e1,e2)));
-        });
+      checkSameTable(e1,e2);
+      checkLogical(F,e1,e2);
+      return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),op,as.ida.col.def(eval(e2)),')',sep=''),table=e2@table,type="expr",aggType=aggType(e1,e2)));
+    });
   } else {
     setMethod(op,signature(e1="ida.col.def"),function (e1, e2) {
-          checkSameTable(e1,e2);
-          checkLogical(F,e1,e2);
-          return(new(Class="ida.col.def",term=paste(sqlFunct,'(',as.ida.col.def(eval(e1)),',',as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="expr",aggType=aggType(e1,e2)));
-        });
+      checkSameTable(e1,e2);
+      checkLogical(F,e1,e2);
+      return(new(Class="ida.col.def",term=paste(sqlFunct,'(',as.ida.col.def(eval(e1)),',',as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="expr",aggType=aggType(e1,e2)));
+    });
     
     setMethod(op,signature(e1="ida.col.def",e2="ida.col.def"),function (e1, e2) {
-          checkSameTable(e1,e2);
-          checkLogical(F,e1,e2);
-          return(new(Class="ida.col.def",term=paste(sqlFunct,'(',as.ida.col.def(eval(e1)),',',as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="expr",aggType=aggType(e1,e2)));
-        });
+      checkSameTable(e1,e2);
+      checkLogical(F,e1,e2);
+      return(new(Class="ida.col.def",term=paste(sqlFunct,'(',as.ida.col.def(eval(e1)),',',as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="expr",aggType=aggType(e1,e2)));
+    });
     
     setMethod(op,signature(e2="ida.col.def"),function (e1, e2) {
-          checkSameTable(e1,e2);
-          checkLogical(F,e1,e2);
-          return(new(Class="ida.col.def",term=paste(sqlFunct,'(',as.ida.col.def(eval(e1)),',',as.ida.col.def(eval(e2)),')',sep=''),table=e2@table,type="expr",aggType=aggType(e1,e2)));
-        });
+      checkSameTable(e1,e2);
+      checkLogical(F,e1,e2);
+      return(new(Class="ida.col.def",term=paste(sqlFunct,'(',as.ida.col.def(eval(e1)),',',as.ida.col.def(eval(e2)),')',sep=''),table=e2@table,type="expr",aggType=aggType(e1,e2)));
+    });
   }
 }
 
@@ -167,22 +167,22 @@ setIdaGenericOp('%%','MOD');
 setIdaGenericCompareOp <- function(op,sqlOp=op) {
   
   setMethod(op,signature(e1="ida.col.def"),function (e1, e2) {
-        checkSameTable(e1,e2);
-        checkLogical(F,e1,e2);
-        return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="logical",aggType="none"));
-      });
+    checkSameTable(e1,e2);
+    checkLogical(F,e1,e2);
+    return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="logical",aggType="none"));
+  });
   
   setMethod(op,signature(e1="ida.col.def",e2="ida.col.def"),function (e1, e2) {
-        checkSameTable(e1,e2);
-        checkLogical(F,e1,e2);
-        return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="logical",aggType="none"));
-      });
+    checkSameTable(e1,e2);
+    checkLogical(F,e1,e2);
+    return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="logical",aggType="none"));
+  });
   
   setMethod(op,signature(e2="ida.col.def"),function (e1, e2) {
-        checkSameTable(e1,e2);
-        checkLogical(F,e1,e2);
-        return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e2@table,type="logical",aggType="none"));
-      });
+    checkSameTable(e1,e2);
+    checkLogical(F,e1,e2);
+    return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e2@table,type="logical",aggType="none"));
+  });
 }
 
 setIdaGenericCompareOp('==','=');
@@ -198,49 +198,49 @@ setIdaGenericCompareOp('>','>');
 setIdaGenericLogicalOp <- function(op,sqlOp=op) {
   
   setMethod(op,signature(e1="ida.col.def"),function (e1, e2) {
-        checkSameTable(e1,e2);
-        checkLogical(T,e1,e2);
-        return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="logical",aggType="none"));
-      });
+    checkSameTable(e1,e2);
+    checkLogical(T,e1,e2);
+    return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="logical",aggType="none"));
+  });
   
   setMethod(op,signature(e1="ida.col.def",e2="ida.col.def"),function (e1, e2) {
-        checkSameTable(e1,e2);
-        checkLogical(T,e1,e2);
-        return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="logical",aggType="none"));
-      });
+    checkSameTable(e1,e2);
+    checkLogical(T,e1,e2);
+    return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e1@table,type="logical",aggType="none"));
+  });
   
   setMethod(op,signature(e2="ida.col.def"),function (e1, e2) {
-        checkSameTable(e1,e2);
-        checkLogical(T,e1,e2);
-        return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e2@table,type="logical",aggType="none"));
-      });
+    checkSameTable(e1,e2);
+    checkLogical(T,e1,e2);
+    return(new(Class="ida.col.def",term=paste('(',as.ida.col.def(eval(e1)),sqlOp,as.ida.col.def(eval(e2)),')',sep=''),table=e2@table,type="logical",aggType="none"));
+  });
 }
 
 setIdaGenericLogicalOp('&',' AND ')
 setIdaGenericLogicalOp('|',' OR ')
 
 setMethod('!',signature(x="ida.col.def"),function (x) {
-      checkLogical(T,x);
-      return(new(Class="ida.col.def",term=paste('NOT ',as.ida.col.def(eval(x)),' ',sep=''),table=x@table,type="logical",aggType="none"));
-    });
+  checkLogical(T,x);
+  return(new(Class="ida.col.def",term=paste('NOT ',as.ida.col.def(eval(x)),' ',sep=''),table=x@table,type="logical",aggType="none"));
+});
 
 ################ Casting operators ############################
 
 setMethod('as.numeric',signature(x="ida.col.def"),function (x) {
-      checkLogical(F,x);
-      return(new(Class="ida.col.def",term=paste('CAST(',as.ida.col.def(eval(x)),' AS DOUBLE)',sep=''),table=x@table,type="expr",aggType=aggType(x)));
-    });
+  checkLogical(F,x);
+  return(new(Class="ida.col.def",term=paste('CAST(',as.ida.col.def(eval(x)),' AS DOUBLE)',sep=''),table=x@table,type="expr",aggType=aggType(x)));
+});
 
 setMethod('as.character',signature(x="ida.col.def"),function (x) {
-      checkLogical(F,x);
-      return(new(Class="ida.col.def",term=paste('CAST(',as.ida.col.def(x),' AS VARCHAR(100))',sep=''),table=x@table,type="expr",aggType=aggType(x)));
-    });
+  checkLogical(F,x);
+  return(new(Class="ida.col.def",term=paste('CAST(',as.ida.col.def(x),' AS VARCHAR(100))',sep=''),table=x@table,type="expr",aggType=aggType(x)));
+});
 
 setMethod('as.integer',signature(x="ida.col.def"),function (x) {
-      
-      checkLogical(F,x);
-      return(new(Class="ida.col.def",term=paste('CAST(',as.ida.col.def(eval(x)),' AS INT)',sep=''),table=x@table,type="expr",aggType=aggType(x)));
-    });
+  
+  checkLogical(F,x);
+  return(new(Class="ida.col.def",term=paste('CAST(',as.ida.col.def(eval(x)),' AS INT)',sep=''),table=x@table,type="expr",aggType=aggType(x)));
+});
 
 ################ NULL check ############################
 
@@ -257,31 +257,31 @@ db.is.null <- function(x) {
 ################ IFELSE ############################
 
 setMethod('ifelse',signature(test="ida.col.def"),function (test,yes,no) {
-      
-      checkSameTable(test,yes,no)
-      
-      if(test@type!='logical')
-        stop("Operator can only be applied to logical values.")
-      
-      return(new(Class="ida.col.def",term=paste("CASE WHEN ", as.ida.col.def(test)," THEN ",as.ida.col.def(eval(yes))," ELSE ",as.ida.col.def(eval(no))," END ",sep=''),table=test@table,type="expr",aggType="none"));		
-    });
+  
+  checkSameTable(test,yes,no)
+  
+  if(test@type!='logical')
+    stop("Operator can only be applied to logical values.")
+  
+  return(new(Class="ida.col.def",term=paste("CASE WHEN ", as.ida.col.def(test)," THEN ",as.ida.col.def(eval(yes))," ELSE ",as.ida.col.def(eval(no))," END ",sep=''),table=test@table,type="expr",aggType="none"));		
+});
 
 setMethod('grep', signature(x="ida.col.def"), function (pattern=NULL, x,ignore.case,perl,value,fixed,useBytes,invert) {
-      #checkSameTable(test,yes,no)
-      if (!is.character(pattern))
-        stop("The grep operator can only be applied to character values.")
-      
-      return(new(Class="ida.col.def",term=paste(as.ida.col.def(eval(x)), " LIKE '%", paste(pattern,collapse='%',sep=''), "%'", sep=''),
-                 table=x@table,type="logical",aggType="none"));		
-    });
+  #checkSameTable(test,yes,no)
+  if (!is.character(pattern))
+    stop("The grep operator can only be applied to character values.")
+  
+  return(new(Class="ida.col.def",term=paste(as.ida.col.def(eval(x)), " LIKE '%", paste(pattern,collapse='%',sep=''), "%'", sep=''),
+             table=x@table,type="logical",aggType="none"));		
+});
 
 ################ Scalar functions ############################
 
 setIdaScalarFunct <- function(scalFunct,scalFunctSQL) {
   setMethod(scalFunct,signature(x='ida.col.def'),function (x) {
-        checkLogical(F,x);
-        return(new(Class="ida.col.def",term=paste(scalFunctSQL,'(',as.ida.col.def(eval(x)),')',sep=''),table=x@table,type="expr",aggType=aggType(x)));
-      });
+    checkLogical(F,x);
+    return(new(Class="ida.col.def",term=paste(scalFunctSQL,'(',as.ida.col.def(eval(x)),')',sep=''),table=x@table,type="expr",aggType=aggType(x)));
+  });
 }
 
 setIdaScalarFunct('abs','ABS')
@@ -358,8 +358,3 @@ checkAggregation <- function(...) {
     }
   }
 }
-
-
-
-
-

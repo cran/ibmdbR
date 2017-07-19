@@ -1,5 +1,5 @@
 # 
-# Copyright (c) 2010, 2014, IBM Corp. All rights reserved. 
+# Copyright (c) 2010, 2014, 2017 IBM Corp. All rights reserved. 
 # 		
 # This program is free software: you can redistribute it and/or modify 
 # it under the terms of the GNU General Public License as published by 
@@ -35,7 +35,6 @@ import(arules)
 import(rpart)
 import(ggplot2)
 
-
 S3method(predict, idaKMeans)
 S3method(predict, idaTwoStep)
 S3method(predict, idaDivCluster)
@@ -54,9 +53,9 @@ S3method(print, idaGlm)
 
 exportMethods("cov", "hist", "print",
 # ida.data.frame
-	 "as.data.frame", "[", "<=", "<", ">=", ">", "!=", "==",
-	 "dim", "NROW", "NCOL", "length", "head",  "names",
-	"mean","min","max", "colnames", "sd", "var","cov", "cor", "summary","as.vector",
+	"as.data.frame", "[", "<=", "<", ">=", ">", "!=", "==",
+	"dim", "NROW", "NCOL", "length", "head",  "names",
+	"mean", "min", "max", "colnames", "sd", "var", "cov", "cor", "summary","as.vector",
 	# ida.data.frame.rows
 	"|", "&", "$", ifelse,as.character,as.integer,as.numeric)	
 
@@ -68,7 +67,7 @@ export(
 	
 	# DB2 general
 	idaShowTables, idaDeleteTable, idaExistTable,
-	idaGetValidTableName, idaIsView,
+	idaGetValidTableName, idaIsView, idaAppend,
 	
 	# DB2 for z/OS
 	idaGetAccelerator, idaListAccelerators, idaGetAcceleratorDetails,
@@ -102,11 +101,11 @@ export(
 	idaNaiveBayes,
 	predict.idaNaiveBayes,
 	print.idaNaiveBayes,
-  	idaArule,
-  	idaApplyRules,
-  	idaTree,
-  	plot.idaTree,
-  	predict.idaTree,
+	idaArule,
+	idaApplyRules,
+	idaTree,
+	plot.idaTree,
+	predict.idaTree,
   
 	#Model management
 	idaRetrieveModel,

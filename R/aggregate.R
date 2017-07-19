@@ -1,5 +1,5 @@
 # 
-# Copyright (c) 2010, 2014, IBM Corp. All rights reserved. 
+# Copyright (c) 2010, 2014 IBM Corp. All rights reserved. 
 # 		
 # This program is free software: you can redistribute it and/or modify 
 # it under the terms of the GNU General Public License as published by 
@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License 
 # along with this program. If not, see <http://www.gnu.org/licenses/>. 
 #
+
 idaAggregate <- function(data,INDICES,FUN,output.name=NULL,clear.existing=F) {
   
   if (!is.ida.data.frame(data))
@@ -27,7 +28,7 @@ idaAggregate <- function(data,INDICES,FUN,output.name=NULL,clear.existing=F) {
   aggMap["sum"] <- "SUM"
   aggMap["sd"] <- "STDDEV"
   aggMap["length"] <- "COUNT"
-
+  
   if((!is.list(INDICES))&&(!inherits(INDICES,"ida.col.def")))
     stop("INDICES must either be a list or a single column definition.")
   

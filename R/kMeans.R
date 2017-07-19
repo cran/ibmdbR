@@ -16,15 +16,15 @@
 #
 
 idaKMeans <- function(
-    data,
-    id,
-    k=3,
-    maxiter=5,
-    distance="euclidean",
-    outtable=NULL,
-    randseed=12345,
-    statistics=NULL,
-    modelname=NULL) {
+  data,
+  id,
+  k=3,
+  maxiter=5,
+  distance="euclidean",
+  outtable=NULL,
+  randseed=12345,
+  statistics=NULL,
+  modelname=NULL) {
   
   if(!idaCheckProcedure("KMEANS","idaKMeans",F)) {
     stop("Function not available.")
@@ -49,11 +49,11 @@ idaKMeans <- function(
     }
     
     xx <- parseTableName(modelName);
-	if (idaIsDb2z()) {
-		model <- paste('"',xx$table,'"',sep=''); 	
-	} else {
-		model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
-	}
+    if (idaIsDb2z()) {
+      model <- paste('"',xx$table,'"',sep=''); 	
+    } else {
+      model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
+    }
     
   }
   
@@ -65,32 +65,32 @@ idaKMeans <- function(
   
   tmpOuttable <- NULL
   if(idaIsDb2z() && is.null(outtable)) {
-	tmpOuttable <- idaGetValidTableName(prefix = "IDAR_OUTTABLE_")
-	outtable <- tmpOuttable
+    tmpOuttable <- idaGetValidTableName(prefix = "IDAR_OUTTABLE_")
+    outtable <- tmpOuttable
   }
   
   tryCatch({	
-        res <- callSP("KMEANS",
-            model=model,
-            intable=tmpView,
-            k=k,
-            maxiter=maxiter,
-            outtable=outtable,
-            distance=distance,
-            id=id,
-            randseed=randseed,
-            statistics=statistics)
-        actual.k <- as.numeric(res[1,1])
-      }, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-      }, finally = {
-        # drop view
-        idaDropView(tmpView)
-		if (!is.null(tmpOuttable)) {
-		   idaDeleteTable(tmpOuttable)
-		}
-      }
+    res <- callSP("KMEANS",
+                  model=model,
+                  intable=tmpView,
+                  k=k,
+                  maxiter=maxiter,
+                  outtable=outtable,
+                  distance=distance,
+                  id=id,
+                  randseed=randseed,
+                  statistics=statistics)
+    actual.k <- as.numeric(res[1,1])
+  }, error = function(e) {
+    # in case of error, let user know what happend
+    stop(e)
+  }, finally = {
+    # drop view
+    idaDropView(tmpView)
+    if (!is.null(tmpOuttable)) {
+      idaDeleteTable(tmpOuttable)
+    }
+  }
   )
   
   result <- idaRetrieveKMeansModel(model);
@@ -111,48 +111,48 @@ idaRetrieveKMeansModel <- function(modelName) {
   columnStatsColList <- "CLUSTERID, COLUMNNAME, CARDINALITY, MODE, MINIMUM,  MAXIMUM, MEAN, VARIANCE, VALIDFREQ, MISSINGFREQ, INVALIDFREQ, IMPORTANCE"; 
   
   if(idaIsDb2z()) {
-     
-	exportModelTable <- idaGetValidTableName(prefix = "IDAR_MODEL_TABLE_")
     
-	tryCatch({	
-        res <- callSP("EXPORT_MODEL_TO_TABLE", model=modelName, outtable=exportModelTable)
-		model1 <- paste('SELECT ', columnsColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Columns\'',sep="")
-		columns <- idaQuery(model1)
-  
-		model2 <- paste('SELECT ', modelColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Model\'',sep="")
-		modelMain <- idaQuery(model2)
-  
-		model3 <- paste('SELECT ', clustersColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Clusters\'',sep="")
-		kmOutStat <- idaQuery(model3)
-  
-		model4 <- paste('SELECT ', columnStatsColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Column Statistics\'',sep="")
-		kols <- idaQuery(model4)
-      }, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-      }, finally = {
-        idaDeleteTable(exportModelTable)
-      }
-	)
-	
+    exportModelTable <- idaGetValidTableName(prefix = "IDAR_MODEL_TABLE_")
+    
+    tryCatch({	
+      res <- callSP("EXPORT_MODEL_TO_TABLE", model=modelName, outtable=exportModelTable)
+      model1 <- paste('SELECT ', columnsColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Columns\'',sep="")
+      columns <- idaQuery(model1)
+      
+      model2 <- paste('SELECT ', modelColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Model\'',sep="")
+      modelMain <- idaQuery(model2)
+      
+      model3 <- paste('SELECT ', clustersColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Clusters\'',sep="")
+      kmOutStat <- idaQuery(model3)
+      
+      model4 <- paste('SELECT ', columnStatsColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Column Statistics\'',sep="")
+      kols <- idaQuery(model4)
+    }, error = function(e) {
+      # in case of error, let user know what happend
+      stop(e)
+    }, finally = {
+      idaDeleteTable(exportModelTable)
+    }
+    )
+    
   } else {
-	model1 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMNS"',sep="")
-	columns <- idaQuery(model1)
-  
-	model2 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_MODEL"',sep="")
-	modelMain <- idaQuery(model2)
-  
-	model3 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_CLUSTERS"',sep="")
-	kmOutStat <- idaQuery(model3)
-  
-	model4 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMN_STATISTICS"',sep="")
-	kols <- idaQuery(model4)
+    model1 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMNS"',sep="")
+    columns <- idaQuery(model1)
+    
+    model2 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_MODEL"',sep="")
+    modelMain <- idaQuery(model2)
+    
+    model3 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_CLUSTERS"',sep="")
+    kmOutStat <- idaQuery(model3)
+    
+    model4 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMN_STATISTICS"',sep="")
+    kols <- idaQuery(model4)
   }
-
+  
   
   contCols <- columns[columns$USAGETYPE=='active'&columns$OPTYPE=='continuous','COLUMNNAME']
   catCols <- columns[columns$USAGETYPE=='active'&columns$OPTYPE=='categorical','COLUMNNAME']
-
+  
   k <- modelMain[1,4]
   distance <- modelMain[1,3]	
   
@@ -181,12 +181,12 @@ idaRetrieveKMeansModel <- function(modelName) {
   cluster <- NULL;
   
   tmp = list(
-      cluster=cluster,
-      centers=cents, 
-      withinss=kmOutStat$WITHINSS,
-      size=kmOutStat$SIZE,
-      distance=distance,
-      model=model
+    cluster=cluster,
+    centers=cents, 
+    withinss=kmOutStat$WITHINSS,
+    size=kmOutStat$SIZE,
+    distance=distance,
+    model=model
   )
   
   class(tmp) = c("idaKMeans", "kmeans")
@@ -226,19 +226,19 @@ predict.idaKMeans <- function(object, newdata, id,...) {
   tmpView <- idaCreateView(newData)
   
   tryCatch({	
-        callSP("PREDICT_KMEANS",
-            model=object$model,
-            intable=tmpView,
-            id=id,
-            outtable=outtable,
-            ...)
-      }, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-      }, finally = {
-        # drop view
-        idaDropView(tmpView)
-      }
+    callSP("PREDICT_KMEANS",
+           model=object$model,
+           intable=tmpView,
+           id=id,
+           outtable=outtable,
+           ...)
+  }, error = function(e) {
+    # in case of error, let user know what happend
+    stop(e)
+  }, finally = {
+    # drop view
+    idaDropView(tmpView)
+  }
   )
   
   object.pred <- ida.data.frame(outtable)

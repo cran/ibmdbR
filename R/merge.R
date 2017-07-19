@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License 
 # along with this program. If not, see <http://www.gnu.org/licenses/>. 
 # 
-# 
 
 idaMerge <- function(x, y, by = intersect(x@cols, y@cols), by.x = by, by.y = by, all = FALSE, all.x = all, all.y = all, sort = TRUE, suffixes = c("_x", "_y"), table = NULL) {
   
@@ -148,4 +147,3 @@ idaMerge <- function(x, y, by = intersect(x@cols, y@cols), by.x = by, by.y = by,
   
   return(output)
 }
-

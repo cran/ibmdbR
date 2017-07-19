@@ -20,11 +20,14 @@
 \alias{idaExistTable}
 \alias{idaGetValidTableName}
 \alias{idaIsView}
+\alias{idaAppend}
 \title{Miscellaneous tools}
 \description{
   These functions simplify working with database tables.
 }
 \usage{
+
+idaAppend(df, table)
 
 idaDeleteTable(table)
 
@@ -33,14 +36,18 @@ idaExistTable(tableName)
 idaIsView(tableName)
 
 idaGetValidTableName(prefix="DATA_FRAME_")
+
 }
 \arguments{
+  \item{df}{A \code{data.frame} object.}
   \item{table}{The name of a database table or an \code{ida.data.frame}.}
   \item{tableName}{The name of a database table.}
   \item{prefix}{Keyword used to specify the prefix of a table name.} 
 }
 
 \details{
+  Use the \code{idaAppend} function to append a \code{data.frame} to the specified table. 
+  
   Use the \code{idaDeleteTable} function to drop the specified table. 
   The specified table must exist in the current database. 
   

@@ -16,18 +16,18 @@
 #
 
 idaDivCluster <- function(
-    data,
-    id,
-    distance="euclidean",
-	maxiter=5, 
-	minsplit=5,
-	maxdepth=3,
-    randseed=12345,
-	outtable=NULL,
-    modelname=NULL) {
+  data,
+  id,
+  distance="euclidean",
+  maxiter=5, 
+  minsplit=5,
+  maxdepth=3,
+  randseed=12345,
+  outtable=NULL,
+  modelname=NULL) {
   
   if(!idaIsDb2z()) {
-	  stop("idaDivCluster is only available for DB2 for z/OS.")
+    stop("idaDivCluster is only available for DB2 for z/OS.")
   }
   if(!idaCheckProcedure("DIVCLUSTER","idaDivCluster",F)) {
     stop("Function not available.")
@@ -53,10 +53,10 @@ idaDivCluster <- function(
     
     xx <- parseTableName(modelName);
     if (idaIsDb2z()) {
-		model <- paste('"',xx$table,'"',sep=''); 	
-	} else {
-		model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
-	}
+      model <- paste('"',xx$table,'"',sep=''); 	
+    } else {
+      model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
+    }
   }
   
   if (!is.null(outtable)&&idaExistTable(outtable)) {
@@ -67,32 +67,32 @@ idaDivCluster <- function(
   
   tmpOuttable <- NULL
   if(is.null(outtable)) {
-	tmpOuttable <- idaGetValidTableName(prefix = "IDAR_OUTTABLE_")
-	outtable <- tmpOuttable
+    tmpOuttable <- idaGetValidTableName(prefix = "IDAR_OUTTABLE_")
+    outtable <- tmpOuttable
   }
   
   tryCatch({	
-        res <- callSP(	"DIVCLUSTER",
-						model=model,
-						intable=tmpView,
-						id=id,
-						distance=distance,
-						maxiter=maxiter, 
-						minsplit=minsplit,
-						maxdepth=maxdepth,
-						randseed=randseed,
-						outtable=outtable)
-        actual.k <- as.numeric(res[1,1])
-      }, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-      }, finally = {
-        # drop view
-        idaDropView(tmpView)
-		if (!is.null(tmpOuttable)) {
-		   idaDeleteTable(tmpOuttable)
-		}
-      }
+    res <- callSP(	"DIVCLUSTER",
+                   model=model,
+                   intable=tmpView,
+                   id=id,
+                   distance=distance,
+                   maxiter=maxiter, 
+                   minsplit=minsplit,
+                   maxdepth=maxdepth,
+                   randseed=randseed,
+                   outtable=outtable)
+    actual.k <- as.numeric(res[1,1])
+  }, error = function(e) {
+    # in case of error, let user know what happend
+    stop(e)
+  }, finally = {
+    # drop view
+    idaDropView(tmpView)
+    if (!is.null(tmpOuttable)) {
+      idaDeleteTable(tmpOuttable)
+    }
+  }
   )
   
   result <- idaRetrieveDivClusterModel(model);
@@ -114,42 +114,42 @@ idaRetrieveDivClusterModel <- function(modelName) {
   # Dictionary
   dictCols <- "ATTNUM, ATTNAME, ATTTYPE, DICNAME, LEVELS, ATTAVG, ATTSTD"
   # "COLUMNNAME, DATATYPE, OPTYPE, USAGETYPE, COLUMNWEIGHT, COMPAREFUNCTION, IMPORTANCE, OUTLIERTREATMENT, LOWERLIMIT, UPPERLIMIT, CLOSURE, STATISTICSTYPE"
-
+  
   # modelColList <- "MODELCLASS,COMPARISONTYPE, COMPARISONMEASURE, NUMCLUSTERS "
   # clustersColList <- "CLUSTERID, NAME, DESCRIPTION, SIZE, RELSIZE, WITHINSS"
   # columnStatsColList <- "CLUSTERID, COLUMNNAME, CARDINALITY, MODE, MINIMUM,  MAXIMUM, MEAN, VARIANCE, VALIDFREQ, MISSINGFREQ, INVALIDFREQ, IMPORTANCE"; 
   
   if(idaIsDb2z()) {
-     
-	exportModelTable <- idaGetValidTableName(prefix = "IDAR_MODEL_TABLE_")
     
-	tryCatch({	
-        res <- callSP("EXPORT_MODEL_TO_TABLE", model=modelName, outtable=exportModelTable)
-		
-		colPropsQuery <-  paste('SELECT ', colPropsCols, ' FROM ', exportModelTable,' where MODELUSAGE= \'Column Properties\'',sep="")
-		colProps.out <- idaQuery(colPropsQuery)
-		
-		dictQuery <-  paste('SELECT ', dictCols, ' FROM ', exportModelTable,' where MODELUSAGE= \'Dictionary\'',sep="")
-		dict.out <- idaQuery(dictQuery)
-		
-		contCols <- colProps.out[colProps.out$COLROLE=='input' & colProps.out$COLTYPE=='cont', 'COLNAME']
-		catCols <- colProps.out[colProps.out$COLROLE=='input' & colProps.out$COLTYPE=='nom', 'COLNAME']
-  		
-		modelCols <- paste(modelCols, ", ", paste(contCols, collapse=", "), ", ", paste(catCols, collapse=", "), sep = "")
-		
-		modelQuery <-  paste('SELECT ', modelCols, ' FROM ', exportModelTable,' where MODELUSAGE= \'Model\' order by abs(CLUSTER_ID)',sep="")
-		model.out <- idaQuery(modelQuery)
-				
-      }, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-      }, finally = {
-        idaDeleteTable(exportModelTable)
-      }
-	)
-	
+    exportModelTable <- idaGetValidTableName(prefix = "IDAR_MODEL_TABLE_")
+    
+    tryCatch({	
+      res <- callSP("EXPORT_MODEL_TO_TABLE", model=modelName, outtable=exportModelTable)
+      
+      colPropsQuery <-  paste('SELECT ', colPropsCols, ' FROM ', exportModelTable,' where MODELUSAGE= \'Column Properties\'',sep="")
+      colProps.out <- idaQuery(colPropsQuery)
+      
+      dictQuery <-  paste('SELECT ', dictCols, ' FROM ', exportModelTable,' where MODELUSAGE= \'Dictionary\'',sep="")
+      dict.out <- idaQuery(dictQuery)
+      
+      contCols <- colProps.out[colProps.out$COLROLE=='input' & colProps.out$COLTYPE=='cont', 'COLNAME']
+      catCols <- colProps.out[colProps.out$COLROLE=='input' & colProps.out$COLTYPE=='nom', 'COLNAME']
+      
+      modelCols <- paste(modelCols, ", ", paste(contCols, collapse=", "), ", ", paste(catCols, collapse=", "), sep = "")
+      
+      modelQuery <-  paste('SELECT ', modelCols, ' FROM ', exportModelTable,' where MODELUSAGE= \'Model\' order by abs(CLUSTER_ID)',sep="")
+      model.out <- idaQuery(modelQuery)
+      
+    }, error = function(e) {
+      # in case of error, let user know what happend
+      stop(e)
+    }, finally = {
+      idaDeleteTable(exportModelTable)
+    }
+    )
+    
   } 
-
+  
   distance <- NULL
   
   sizes <- model.out[,"CLUSTER_SIZE"]
@@ -158,12 +158,12 @@ idaRetrieveDivClusterModel <- function(modelName) {
   cluster <- NULL;
   
   tmp = list(
-      cluster=cluster,
-      centers=model.out, 
-      withinss=withinss,
-      size=sizes,
-      distance=distance,
-      model=modelName
+    cluster=cluster,
+    centers=model.out, 
+    withinss=withinss,
+    size=sizes,
+    distance=distance,
+    model=modelName
   )
   
   class(tmp) = c("idaDivCluster", "divCluster")
@@ -203,19 +203,19 @@ predict.idaDivCluster <- function(object, newdata, id,...) {
   tmpView <- idaCreateView(newData)
   
   tryCatch({	
-        callSP("PREDICT_DIVCLUSTER",
-            model=object$model,
-            intable=tmpView,
-            id=id,
-            outtable=outtable,
-            ...)
-      }, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-      }, finally = {
-        # drop view
-        idaDropView(tmpView)
-      }
+    callSP("PREDICT_DIVCLUSTER",
+           model=object$model,
+           intable=tmpView,
+           id=id,
+           outtable=outtable,
+           ...)
+  }, error = function(e) {
+    # in case of error, let user know what happend
+    stop(e)
+  }, finally = {
+    # drop view
+    idaDropView(tmpView)
+  }
   )
   
   object.pred <- ida.data.frame(outtable)

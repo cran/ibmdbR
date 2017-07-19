@@ -24,17 +24,18 @@ Open or closes a IDA database connection}
 \description{
 These functions are used to open or close an existing IDA database connection.}
 \usage{
-idaConnect(dsn, uid = "", pwd = "", conType = "odbc")
+idaConnect(dsn, uid = "", pwd = "", conType = "odbc", 
+  dsnLookup = c("auto", "default", "store"), ...)
 
 idaClose(idaConn, conType = "odbc")
-
 }
 \arguments{
-
   \item{dsn}{The DSN of the data base.}
   \item{uid}{The user name.}
   \item{pwd}{The password.}
   \item{conType}{The connection type.}  
+  \item{dsnLookup}{This parameter only is used when ibmdbR is loaded in an RStudio instance of IBM Data Science Experience. Per default ("auto") ibmdbR automatically detects if the provided dsn value is an usual DSN string or the name of a connection in the local connection store. The lookup method can also be manually set to "default", if the dsn parameter should be treated as an usual DSN string. If set to "store" the connection store of RStudio on DSX will be used.}
+  \item{...}{Additional arguments for DSN lookup.}
   \item{idaConn}{The connection object.}
 }
 

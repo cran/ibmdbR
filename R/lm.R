@@ -1,5 +1,5 @@
 # 
-# Copyright (c) 2010, 2014, IBM Corp. All rights reserved. 
+# Copyright (c) 2010, 2014, 2016, 2017 IBM Corp. All rights reserved. 
 #     
 # This program is free software: you can redistribute it and/or modify 
 # it under the terms of the GNU General Public License as published by 
@@ -19,7 +19,7 @@ idaLm <- function(form, idadf, id  = "id", modelname = NULL, dropModel = TRUE, l
   
   storeCovMat   <- TRUE
   clearExisting <- TRUE
-              
+  
   #SANITY-CHECKS
   if(!is.logical(storeCovMat)){
     stop("Parameter storeCovMat has to be logical.")
@@ -55,25 +55,34 @@ idaLm <- function(form, idadf, id  = "id", modelname = NULL, dropModel = TRUE, l
     stop("This function is currently not supported for more than 78 columns.")
   }
   
-  #internal function that calls the stored procedure.
+  # internal function that calls the stored procedure.
   idaLmSP <- function(formOut, idadf, id  = "id", modelname = NULL, storeCovMat = TRUE, dropModel = FALSE,
-                      clearExisting = TRUE, ...){
-	if(idaIsDb2z()) {
-		encoding <- idaGetAcceleratorEncoding();
-		if (encoding != "UNICODE"){
-			stop(paste("For DB2 for z/OS connections only UNICODE data are supported. The encoding of the input data, however is ", encoding, sep=""))
-		}
-	}				  
+                      clearExisting = TRUE, ...) {
+    if(idaIsDb2z()) {
+      encoding <- idaGetAcceleratorEncoding();
+      if (encoding != "UNICODE"){
+        stop(paste("For DB2 for z/OS connections only UNICODE data are supported. The encoding of the input data, however is ", encoding, sep=""))
+      }
+    }				  
     
-	formOut$cols <- formOut$cols[formOut$cols!= id]
-	# check if given id is valid
-	colu = idadf@cols
-	if (!(id %in% colu))
-		stop(simpleError(paste("Id variable is not available in ida.data.frame:", id)))
-  
-	id  <- paste('\"',id,'\"',sep="")
-		
-	#CREATE MODELNAME
+    formOut$cols <- formOut$cols[formOut$cols != id]
+    # check if given id is valid
+    colu = idadf@cols
+    
+    
+    tmpId = FALSE
+    # if no id was provided generate a temporary id
+    if (!(id %in% colu)) {
+      if (idaIsDb2z() || is.null(id)) {
+        stop(simpleError(paste("Id variable is not available in ida.data.frame:", id)))
+      } else {
+        warning("No valid id column specified for ida.data.frame, using a temporary id column.")
+        tmpId = TRUE
+      }
+    }
+    id.quoted  <- quoteSQLIdentifier(id)
+    
+    #CREATE MODELNAME
     if (is.null(modelname)) {
       modelname <- idaGetValidModelName('LINEAR_REGRESSION_')
     } else {    
@@ -81,13 +90,13 @@ idaLm <- function(form, idadf, id  = "id", modelname = NULL, dropModel = TRUE, l
         stop("Space in modelname not allowed.")
       }   
       xx <- parseTableName(modelname);
-	  if (idaIsDb2z()) {
-		modelname <- paste('"',xx$table,'"',sep=''); 	
-	  } else {
-		modelname <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
-	  }
+      if (idaIsDb2z()) {
+        modelname <- paste('"',xx$table,'"',sep=''); 	
+      } else {
+        modelname <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
+      }
     }
-      
+    
     #ClearExisting
     if(idaModelExists(modelname)) { 
       if(clearExisting){
@@ -96,11 +105,16 @@ idaLm <- function(form, idadf, id  = "id", modelname = NULL, dropModel = TRUE, l
         stop("Model already exists.")
       } 
     }
-
+    
     #Create View
-    input <- idaCreateView(idadf) 
-	
-	#Create formula with all attributes for the SP
+    if (tmpId == TRUE) {
+      # Add temporary id to view
+      input <- idaCreateView(idadf, newColumn = paste0('ROW_NUMBER() OVER () AS ', id.quoted))
+    } else {
+      input <- idaCreateView(idadf) 
+    }
+    
+    #Create formula with all attributes for the SP
     #Catching column-names with ' or " inside
     formOut$cols <- gsub('"', '""', formOut$cols)
     attr <- paste0("\"", formOut$cols, "\"", collapse=";")
@@ -114,31 +128,32 @@ idaLm <- function(form, idadf, id  = "id", modelname = NULL, dropModel = TRUE, l
     if(formOut$intercept){
       intercept <- "TRUE"
     }
-    #CALL STORED PROCEDURE
-	nrows<- -1
+    
+    # CALL STORED PROCEDURE
+    nrows<- -1
     tryCatch({ 
-		if(idaIsDb2z()) {
-			res <- callSP("LINEAR_REGRESSION ",
-							model = modelname,
-							intable = input,
-							id=id,
-							target = target,
-							coldefrole = "ignore",
-							incolumn = attr,
-							intercept = intercept,
-							calculateDiagnostics=TRUE)
-			nrows <- nrow(idadf)				
-		} else {
-			res <- callSP("LINEAR_REGRESSION ",
-							model = modelname,
-							intable = input,
-							id=id,
-							target = target,
-							coldefrole = "ignore",
-							incolumn = attr,
-							storecovariancematrix = storeCovMat,
-							intercept = intercept)
-		}				
+      if(idaIsDb2z()) {
+        res <- callSP("LINEAR_REGRESSION ",
+                      model = modelname,
+                      intable = input,
+                      id=id.quoted,
+                      target = target,
+                      coldefrole = "ignore",
+                      incolumn = attr,
+                      intercept = intercept,
+                      calculateDiagnostics=TRUE)
+        nrows <- nrow(idadf)				
+      } else {
+        res <- callSP("LINEAR_REGRESSION ",
+                      model = modelname,
+                      intable = input,
+                      id=id.quoted,
+                      target = target,
+                      coldefrole = "ignore",
+                      incolumn = attr,
+                      storecovariancematrix = storeCovMat,
+                      intercept = intercept)
+      }				
       
     }, error = function(e) {
       # in case of error, let user know what happend
@@ -146,24 +161,23 @@ idaLm <- function(form, idadf, id  = "id", modelname = NULL, dropModel = TRUE, l
     }, finally = {
       # drop view
       idaDropView(input)
-    }
-    )
+    })
     
     LinMod <- idaRetrieveidaLmModel(modelname, nrows=nrows)
-      
+    
     if(dropModel){
       idaDropModel(modelname)
     }
     return(LinMod)
   }
   
-  idaLmSQL<-function(form,idadf, intercept){
+  idaLmSQL <- function(form, idadf, intercept) {
     #calculates linear model for all continous variables and no in database model
     idaDotProductSQL <- function(idadf,colNames,intercept) {
-    
+      
       cols <- colnames(idadf);
       
-      if(length(cols)>42)
+      if(length(cols) > 42)
         stop("Only up to 40 predictors are currently supported.");
       
       queryList <- c();	
@@ -228,7 +242,7 @@ idaLm <- function(form, idadf, id  = "id", modelname = NULL, dropModel = TRUE, l
         mdat
       }  
     }
-  
+    
     
     #Creates a View with all columns that are in the formula form and deletes all
     #rows that have NA values. This might lead to an empty table!
@@ -237,13 +251,13 @@ idaLm <- function(form, idadf, id  = "id", modelname = NULL, dropModel = TRUE, l
     
     mat <- NULL
     tryCatch({
-     mat <- idaDotProductSQL(inputDf,input$colNames,intercept)
-     if(intercept){
-       numrow <- mat[nrow(mat), ncol(mat)]
-     }else{
-       numrow <- nrow(inputDf)
-     }
-     newidaLm <- idaLmStatistics(mat, numrow = numrow)
+      mat <- idaDotProductSQL(inputDf,input$colNames,intercept)
+      if(intercept){
+        numrow <- mat[nrow(mat), ncol(mat)]
+      }else{
+        numrow <- nrow(inputDf)
+      }
+      newidaLm <- idaLmStatistics(mat, numrow = numrow)
     },error=function(e){
       stop(e)
     },finally={
@@ -252,31 +266,31 @@ idaLm <- function(form, idadf, id  = "id", modelname = NULL, dropModel = TRUE, l
     
     card <- vector(mode = "integer", length = length(formOut$cols)) + 1
     names(card) <- formOut$cols
-   
+    
     newidaLm <- c(newidaLm, list(CovMat = mat, card = card, model = NULL))
     class(newidaLm) <- "idaLm"
     return(newidaLm)
   }
-
+  
   #Checking for categorical columns so we know which method to choose.
-  tableDef <- idaTableDef(idadf, FALSE)#all columns with their datatype
-  tableDef <- tableDef[match(formOut$cols, tableDef$name), ]#look for the columns out of form
+  tableDef <- idaTableDef(idadf, FALSE) #all columns with their datatype
+  tableDef <- tableDef[match(formOut$cols, tableDef$name), ] #look for the columns out of form
   numOfCatCols <- nrow(tableDef[tableDef$valType == "CATEGORICAL", ])
   
   if(idaIsDb2z() && idaGetAcceleratorEncoding() != "UNICODE") {
-  	if (numOfCatCols == 0) {
-		LinMod <- idaLmSQL(form, idadf, formOut$intercept)
-	} else{
-		stop("At least one of the input columns is categorical with non-UNICODE encoding which is not supported for DB2 z/OS.")
-	}
-   } else{
-	if (numOfCatCols == 0 && dropModel && nrow(tableDef) < 42) {
-		LinMod <- idaLmSQL(form, idadf, formOut$intercept)
-	} else{
-		# id is needed for idaLmSP
-		LinMod <- idaLmSP(formOut, idadf, id=id, modelname = modelname, storeCovMat = storeCovMat,
-							dropModel = dropModel, clearExisting = clearExisting)
-	}
+    if (numOfCatCols == 0) {
+      LinMod <- idaLmSQL(form, idadf, formOut$intercept)
+    } else{
+      stop("At least one of the input columns is categorical with non-UNICODE encoding which is not supported for DB2 z/OS.")
+    }
+  } else {
+    if (numOfCatCols == 0 && dropModel && nrow(tableDef) < 42) {
+      LinMod <- idaLmSQL(form, idadf, formOut$intercept)
+    } else{
+      # id is needed for idaLmSP
+      LinMod <- idaLmSP(formOut, idadf, id=id, modelname = modelname, storeCovMat = storeCovMat,
+                        dropModel = dropModel, clearExisting = clearExisting)
+    }
   }
   if(dropModel){
     LinMod$model <- NULL
@@ -293,7 +307,7 @@ idaLmStatistics<-function(mat, coeff = NULL, numrow){
   XTX <- mat[-1, -1, drop = FALSE]
   XTY <- mat[1, -1]
   idaInvXTX <- NULL
-
+  
   getLogLikelihood <- function(RSS, n) {
     -n/2*log(2*pi) - n/2*log(RSS/n) - n/2
   }
@@ -367,97 +381,97 @@ idaRetrieveidaLmModel<-function(modelname, nrows=-1){
   r_squared <- NULL
   
   if(idaIsDb2z()) {
-     
-	exportModelTable <- idaGetValidTableName(prefix = "IDAR_MODEL_TABLE_")
     
-	tryCatch({	
-        res <- callSP("EXPORT_MODEL_TO_TABLE", model=model, outtable=exportModelTable)
-		modelColExpr <- "case when LEVEL_NAME is NULL then VAR_NAME else VAR_NAME || ' - ' || LEVEL_NAME end, VALUE, ST_DEV, TVAL, PVAL "
-		modelquery <- paste('SELECT ', modelColExpr, ' FROM ', exportModelTable,' where MODELUSAGE= \'Model\' ORDER BY VAR_ID',sep="")	
-		Lmdata <- idaQuery(modelquery, na.strings = NULL)
-		coeff <- Lmdata[-(1:3),]
-		names(coeff) <- c("",  "Estimate", "Std.Error", "t.value", "Pr(>|t|") 
-		y_var_est <- Lmdata[1,2]
-		rss <- Lmdata[2,2]
-		r_squared <- Lmdata[3,2]
-		numrow <- nrows
-      }, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-      }, finally = {
-        idaDeleteTable(exportModelTable)
-      }
-	)
+    exportModelTable <- idaGetValidTableName(prefix = "IDAR_MODEL_TABLE_")
+    
+    tryCatch({	
+      res <- callSP("EXPORT_MODEL_TO_TABLE", model=model, outtable=exportModelTable)
+      modelColExpr <- "case when LEVEL_NAME is NULL then VAR_NAME else VAR_NAME || ' - ' || LEVEL_NAME end, VALUE, ST_DEV, TVAL, PVAL "
+      modelquery <- paste('SELECT ', modelColExpr, ' FROM ', exportModelTable,' where MODELUSAGE= \'Model\' ORDER BY VAR_ID',sep="")	
+      Lmdata <- idaQuery(modelquery, na.strings = NULL)
+      coeff <- Lmdata[-(1:3),]
+      names(coeff) <- c("",  "Estimate", "Std.Error", "t.value", "Pr(>|t|") 
+      y_var_est <- Lmdata[1,2]
+      rss <- Lmdata[2,2]
+      r_squared <- Lmdata[3,2]
+      numrow <- nrows
+    }, error = function(e) {
+      # in case of error, let user know what happend
+      stop(e)
+    }, finally = {
+      idaDeleteTable(exportModelTable)
+    }
+    )
   } else { 
-	try({
-	
-		modelquery <- paste0('SELECT * FROM "',modelSchema,'"."',model,'_MODEL"')
-		Lmdata <- idaQuery(modelquery, na.strings = NULL)
-		covmatquery <- paste0('SELECT * FROM "',modelSchema,'"."',model,'_COVARIANCE_MATRIX"')
-	
-		interceptpos <- match(-1,Lmdata$VAR_ID)
-		if(!is.na(interceptpos)){
-			Lmdata$VAR_NAME[interceptpos] <- "Intercept" #changing it from (Intercept)
-			intercept <- 1
-		}
-		coeff<-c()
-		calcstats <- FALSE
-		if(!is.null(covmatquery)) {
-			#Covariance-matrix
-			covMat  <- idaQuery(covmatquery)  
-			nrowMat <- sqrt(nrow(covMat))#if full matrix saved
-			#Change RCV-format into a matrix
-			mat <- matrix(as.double(1:(nrowMat^2)),nrow=nrowMat,ncol=nrowMat)
-			rowNames <- vector(mode = "character", length=nrowMat)
-			covMat[, c(1, 3, 5)] <- data.matrix(covMat[, c(1, 3, 5)])
-			for(i in 1:nrow(covMat)){
-				mat[covMat$ROW_ID[i], covMat$COL_ID[i]] <- covMat$VAL[i]
-				if(covMat$COL_ID[i] == 1){
-					rowNames[covMat$ROW_ID[i]] <- covMat$ROW_NAME[i]
-				}
-			}
-			colnames(mat) <- rowNames
-			rownames(mat) <- rowNames
-    
-			#intercept is in line 2 instead of the last one.
-			if(intercept){
-				interceptpos <- match("Intercept", rowNames)
-				switchIntercept <-  c((1:nrowMat)[-interceptpos], interceptpos)
-				mat <- mat[switchIntercept, switchIntercept]
-			}
-		}
-		#orders the coeff table in the order of the CovMat if it exists
-		coeff <- Lmdata$VALUE
+    try({
+      
+      modelquery <- paste0('SELECT * FROM "',modelSchema,'"."',model,'_MODEL"')
+      Lmdata <- idaQuery(modelquery, na.strings = NULL)
+      covmatquery <- paste0('SELECT * FROM "',modelSchema,'"."',model,'_COVARIANCE_MATRIX"')
+      
+      interceptpos <- match(-1,Lmdata$VAR_ID)
+      if(!is.na(interceptpos)){
+        Lmdata$VAR_NAME[interceptpos] <- "Intercept" #changing it from (Intercept)
+        intercept <- 1
+      }
+      coeff<-c()
+      calcstats <- FALSE
+      if(!is.null(covmatquery)) {
+        #Covariance-matrix
+        covMat  <- idaQuery(covmatquery)  
+        nrowMat <- sqrt(nrow(covMat))#if full matrix saved
+        #Change RCV-format into a matrix
+        mat <- matrix(as.double(1:(nrowMat^2)),nrow=nrowMat,ncol=nrowMat)
+        rowNames <- vector(mode = "character", length=nrowMat)
+        covMat[, c(1, 3, 5)] <- data.matrix(covMat[, c(1, 3, 5)])
+        for(i in 1:nrow(covMat)){
+          mat[covMat$ROW_ID[i], covMat$COL_ID[i]] <- covMat$VAL[i]
+          if(covMat$COL_ID[i] == 1){
+            rowNames[covMat$ROW_ID[i]] <- covMat$ROW_NAME[i]
+          }
+        }
+        colnames(mat) <- rowNames
+        rownames(mat) <- rowNames
         
-		if(!is.null(mat)){
-			names(coeff) <- rownames(mat)[-1]#ASSUMPTION: Target variable in the first row
-			calcstats <- TRUE
-		}
+        #intercept is in line 2 instead of the last one.
+        if(intercept){
+          interceptpos <- match("Intercept", rowNames)
+          switchIntercept <-  c((1:nrowMat)[-interceptpos], interceptpos)
+          mat <- mat[switchIntercept, switchIntercept]
+        }
+      }
+      #orders the coeff table in the order of the CovMat if it exists
+      coeff <- Lmdata$VALUE
+      
+      if(!is.null(mat)){
+        names(coeff) <- rownames(mat)[-1]#ASSUMPTION: Target variable in the first row
+        calcstats <- TRUE
+      }
+      
+    },silent=TRUE)
     
-	},silent=TRUE)
-  
-	
-	if(intercept){
-		numrow <- mat[nrowMat, nrowMat]
-	} else {
-		modelinfo <- idaQuery(paste0("call idax.list_params('schema=", modelSchema, ", format=short,
+    
+    if(intercept){
+      numrow <- mat[nrowMat, nrowMat]
+    } else {
+      modelinfo <- idaQuery(paste0("call idax.list_params('schema=", modelSchema, ", format=short,
 										where=modelname=''", model, "''')"))
-		numrow <- as.numeric(modelinfo[match("valid_rows_in_intable", modelinfo$PARAMETERNAME), ]$PARAMETERVALUE)
-	}
-  
-	#puts the coefficient of the model into a vector with the parsed names  
-	for(i in 1:length(Lmdata$VAR_NAME)){
-		# added nchar length check, since there can be "" entries as levels
-		if(!is.na(Lmdata$LEVEL_NAME[i]) && nchar(Lmdata$LEVEL_NAME[i]) > 0){
-			tempname <- paste0(Lmdata$VAR_NAME[i],"___",Lmdata$LEVEL_NAME[i])
-			coeff[tempname] <- Lmdata$VALUE[i]
-		} else {
-			coeff[Lmdata$VAR_NAME[i]] <- Lmdata$VALUE[i]
-		}
-	}
-	coeff<-as.matrix(coeff)
-	colnames(coeff) <- c("Coefficients")
-
+      numrow <- as.numeric(modelinfo[match("valid_rows_in_intable", modelinfo$PARAMETERNAME), ]$PARAMETERVALUE)
+    }
+    
+    #puts the coefficient of the model into a vector with the parsed names  
+    for(i in 1:length(Lmdata$VAR_NAME)){
+      # added nchar length check, since there can be "" entries as levels
+      if(!is.na(Lmdata$LEVEL_NAME[i]) && nchar(Lmdata$LEVEL_NAME[i]) > 0){
+        tempname <- paste0(Lmdata$VAR_NAME[i],"___",Lmdata$LEVEL_NAME[i])
+        coeff[tempname] <- Lmdata$VALUE[i]
+      } else {
+        coeff[Lmdata$VAR_NAME[i]] <- Lmdata$VALUE[i]
+      }
+    }
+    coeff<-as.matrix(coeff)
+    colnames(coeff) <- c("Coefficients")
+    
   } 	
   newidaLm <- list(coefficients = coeff, coefftab = NULL, RSS = rss, sigma = NULL, effects = NULL,
                    rank = NULL, df.residuals = NULL, likelihood = NULL, AIC = NULL,
@@ -467,7 +481,7 @@ idaRetrieveidaLmModel<-function(modelname, nrows=-1){
     #Get the attribute names and their cardinality in order of the CovMat
     card <- table(Lmdata$VAR_NAME)[unique(Lmdata$VAR_NAME)]
     card <- card[!"Intercept" == names(card)]
-   
+    
     covmatnames <- rownames(mat)[-1]
     covmatnames <- covmatnames[!"Intercept" == covmatnames]
     
@@ -486,25 +500,25 @@ idaRetrieveidaLmModel<-function(modelname, nrows=-1){
   class(newidaLm) <- c("idaLm")
   return(newidaLm)
 }
-  
+
 print.idaLm <- function(x, ...) {
   cat("\nCoefficients:\n")
   if(is.null(x$coefftab)){
     print(x$coefficients)
   } else {
-  coeff<-x$coefftab
-  coeff$" " <-rep(" ", nrow(coeff))
-  coeff[coeff$"Pr(>|t|)" < 0.1,   5] <- "."
-  coeff[coeff$"Pr(>|t|)" < 0.05,  5] <- "*"
-  coeff[coeff$"Pr(>|t|)" < 0.01,  5] <- "**"
-  coeff[coeff$"Pr(>|t|)" < 0.001, 5] <- "***"
-  print(coeff)
-  cat("\n---")
-  cat("\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1")
-  cat("\nResidual standard error: ", x$sigma, " on ", x$df.residuals, " degrees of freedom\n\n")
-  cat("Log-likelihood: ", x$Loglike, "\n")
-  cat("AIC: ", x$AIC, "\n")
-  cat("BIC: ", x$BIC, "\n")
+    coeff<-x$coefftab
+    coeff$" " <-rep(" ", nrow(coeff))
+    coeff[coeff$"Pr(>|t|)" < 0.1,   5] <- "."
+    coeff[coeff$"Pr(>|t|)" < 0.05,  5] <- "*"
+    coeff[coeff$"Pr(>|t|)" < 0.01,  5] <- "**"
+    coeff[coeff$"Pr(>|t|)" < 0.001, 5] <- "***"
+    print(coeff)
+    cat("\n---")
+    cat("\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1")
+    cat("\nResidual standard error: ", x$sigma, " on ", x$df.residuals, " degrees of freedom\n\n")
+    cat("Log-likelihood: ", x$Loglike, "\n")
+    cat("AIC: ", x$AIC, "\n")
+    cat("BIC: ", x$BIC, "\n")
   }
 }
 

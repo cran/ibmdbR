@@ -14,23 +14,22 @@
 # You should have received a copy of the GNU General Public License 
 # along with this program. If not, see <http://www.gnu.org/licenses/>. 
 # 
-# 
 
 idaListModels <- function() {
-   if(idaIsDb2z()) {
+  if(idaIsDb2z()) {
     # accelerator  <- idaGetAccelerator(); 
- 	# res <- idaQuery( "call inza.list_models('", accelerator, "', '', '', '')" )
-	tryCatch({	
-        res <- callSP('LIST_MODELS')
-		idaDataFrameFromResultStr(paste(res$TABLES_DETAILS, " ", sep=""))
-      }, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-      }
+    # res <- idaQuery( "call inza.list_models('", accelerator, "', '', '', '')" )
+    tryCatch({	
+      res <- callSP('LIST_MODELS')
+      idaDataFrameFromResultStr(paste(res$TABLES_DETAILS, " ", sep=""))
+    }, error = function(e) {
+      # in case of error, let user know what happend
+      stop(e)
+    }
     )
-   } else {
+  } else {
     idaQuery("call idax.list_models()")
-   }
+  }
 }
 
 idaDropModel <- function(modelname) {
@@ -39,16 +38,16 @@ idaDropModel <- function(modelname) {
   if(idaIsDb2z()) {
     model <- paste('"',xx$table,'"',sep='')	
     tryCatch({	
-        res <- callSP('DROP_MODEL', model=model)
-		return(res)		
-      }, error = function(e) {
-        # in case of error, let user know what happend
-        stop(e)
-      }
+      res <- callSP('DROP_MODEL', model=model)
+      return(res)		
+    }, error = function(e) {
+      # in case of error, let user know what happend
+      stop(e)
+    }
     )
   } else {
-	model <- paste('"',xx$schema,'"."',xx$table,'"',sep='') 	
-	idaQuery("CALL IDAX.DROP_MODEL('model=",model,"')")
+    model <- paste('"',xx$schema,'"."',xx$table,'"',sep='') 	
+    idaQuery("CALL IDAX.DROP_MODEL('model=",model,"')")
   }	
 }
 
@@ -70,41 +69,41 @@ idaRetrieveModel <- function(modelname) {
   
   models <- idaListModels()
   if(idaIsDb2z()) {
-	# ListModels does not include the MODELSCHEMA column for DB2 s/OS
-	modelAlgorithm <- models$ALGORITHM[model == models$MODELNAME]
-	#THE NAME OF THE RETRIEVEMODEL FUNCTION HAS TO BE AT THE SAME INDEX AS THE NAME OF THE
+    # ListModels does not include the MODELSCHEMA column for DB2 s/OS
+    modelAlgorithm <- models$ALGORITHM[model == models$MODELNAME]
+    #THE NAME OF THE RETRIEVEMODEL FUNCTION HAS TO BE AT THE SAME INDEX AS THE NAME OF THE
     #RESPECTIVE ALGORITHM...
-	retrievemethods <- c("idaRetrieveKMeansModel", "idaRetrieveTwoStepModel", "idaRetrieveNBModel",
-						 "idaRetrieveTreeModel","idaRetrieveTreeModel", "idaRetrieveRulesModel",
-						 "idaRetrieveidaLmModel", "idaRetrieveGlmModel",  "idaRetrieveDivClusterModel")
-  
-	algorithms <- c("KMeans", "twostep", "Naive Bayes","Regression Tree", "Decision Tree", "FPGrowth",
-					"Linear Regression", "GLM", "Divisive")
-  
+    retrievemethods <- c("idaRetrieveKMeansModel", "idaRetrieveTwoStepModel", "idaRetrieveNBModel",
+                         "idaRetrieveTreeModel","idaRetrieveTreeModel", "idaRetrieveRulesModel",
+                         "idaRetrieveidaLmModel", "idaRetrieveGlmModel",  "idaRetrieveDivClusterModel")
+    
+    algorithms <- c("KMeans", "twostep", "Naive Bayes","Regression Tree", "Decision Tree", "FPGrowth",
+                    "Linear Regression", "GLM", "Divisive")
+    
   } else {
-	modelAlgorithm <- models$ALGORITHM[model == models$MODELNAME &
-										modelSchema == models$MODELSCHEMA]		
-	#THE NAME OF THE RETRIEVEMODEL FUNCTION HAS TO BE AT THE SAME INDEX AS THE NAME OF THE
+    modelAlgorithm <- models$ALGORITHM[model == models$MODELNAME &
+                                         modelSchema == models$MODELSCHEMA]		
+    #THE NAME OF THE RETRIEVEMODEL FUNCTION HAS TO BE AT THE SAME INDEX AS THE NAME OF THE
     #RESPECTIVE ALGORITHM...									
-	retrievemethods <- c("idaRetrieveKMeansModel", "idaRetrieveRulesModel", "idaRetrieveNBModel",
-						"idaRetrieveSeqRulesModel", "idaRetrieveidaLmModel", "idaRetrieveTreeModel",
-						"idaRetrieveTreeModel")
-  
-	algorithms <- c("Kmeans", "Association Rules", "Naive Bayes", "Sequential Patterns",
-					"Linear Regression", "Regression Tree", "Decision Tree")
-  										
-   }									 
-   if(length(modelAlgorithm)==0){
+    retrievemethods <- c("idaRetrieveKMeansModel", "idaRetrieveRulesModel", "idaRetrieveNBModel",
+                         "idaRetrieveSeqRulesModel", "idaRetrieveidaLmModel", "idaRetrieveTreeModel",
+                         "idaRetrieveTreeModel")
+    
+    algorithms <- c("Kmeans", "Association Rules", "Naive Bayes", "Sequential Patterns",
+                    "Linear Regression", "Regression Tree", "Decision Tree")
+    
+  }									 
+  if(length(modelAlgorithm)==0){
     stop("The model you are trying to retrieve does not exist.")
-   } 
- 
-    algNr <- match(modelAlgorithm, algorithms)
-    if(is.na(algNr)){stop(paste("The algorithm", modelAlgorithm, "is not supported by ibmdbR."))}
-    tryCatch(
+  } 
+  
+  algNr <- match(modelAlgorithm, algorithms)
+  if(is.na(algNr)){stop(paste("The algorithm", modelAlgorithm, "is not supported by ibmdbR."))}
+  tryCatch(
     model <- get(retrievemethods[algNr])(modelname),
     error = function(e){
-             stop(e)
-           }
+      stop(e)
+    }
   )
   return(model)
 }
@@ -113,8 +112,8 @@ idaModelExists <- function(modelname) {
   xx <- parseTableName(modelname);
   models <- idaListModels()
   if(idaIsDb2z()) {
-	# ListModels does not include the MODELSCHEMA column for DB2 s/OS
-	return(nrow(models[(models$MODELNAME==xx$table),])>0)
+    # ListModels does not include the MODELSCHEMA column for DB2 s/OS
+    return(nrow(models[(models$MODELNAME==xx$table),])>0)
   } else {
     return(nrow(models[(models$MODELNAME==xx$table)&(models$MODELSCHEMA==xx$schema),])>0)
   }	

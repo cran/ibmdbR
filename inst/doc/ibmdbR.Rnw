@@ -14,7 +14,8 @@
 
 \renewcommand{\headrulewidth}{0pt}
 \pagestyle{fancy}
-\lfoot{\fontsize{7}{11}\selectfont © Copyright 2014 IBM Corporation. IBM, the IBM logo, dashBD, Bluemix, and DB2 are trademarks of IBM Corporation, registered in many jurisdictions worldwide.}
+
+\lfoot{\fontsize{7}{11}\selectfont \textcopyright Copyright 2014, 2016, 2017, IBM Corporation. IBM, the IBM logo, dashDB, z/OS, Bluemix, and Db2 are trademarks of IBM Corporation, registered in many jurisdictions worldwide.}
 \cfoot{}
 \rfoot{}
 \rhead{}
@@ -29,9 +30,10 @@
 \makeatother
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 
 \title{Use IBM In-Database Analytics with R}
-\author{M. Wurst, C. Blaha, IBM Germany Research and Development}
+\author{M. Wurst, C. Blaha, A. Eckert, IBM Germany Research and Development}
 
 \maketitle
 \thispagestyle{fancy}
@@ -49,27 +51,28 @@ extracting data and ensures that the data that is being analyzed is as current a
 functions additionally use lazy loading to load only those parts of the data that are actually required, to further
 increase efficiency.
 
-
 \section*{Prerequisites}
 
-The ibmdbR package is designed to work with IBM DB2©
-for Linux and Windows Version 10.5 (in the following abbreviated to DB2), IBM dashDB© (in the following dashDB)
-as well as DB2 z/OS (C) in conjunction with IBM DB2 Analytics Accelerator (C) (in the following DB2 z/OS).
-Before you start, you must install DB2 or provision an instance
-of dashDB (see \hyperref[further_reading]{,,Further Reading``}). 
+The ibmdbR package is designed to work with the following IBM database products and services:
+\begin{itemize}
+  \item Products
+  \begin{itemize}
+    \item IBM\textsuperscript{\textregistered} Db2\textsuperscript{\textregistered} Warehouse (formerly IBM dashDB\textsuperscript{\textregistered} Local; in the following Db2)
+    \item IBM Db2 for z/OS\textsuperscript{\textregistered} in conjunction with IBM Db2 Analytics Accelerator for z/OS (in the following Db2 z/OS)
+  \end{itemize}
+    \item Managed services
+  \begin{itemize}
+    \item IBM Db2 Warehouse on Cloud (formerly IBM dashDB for Analytics; in the following Db2)
+  \end{itemize}
+\end{itemize}
 
-If you use dashDB from your web brower,  everything is pre-configured and ready to be 
+Before you start, you must install Db2 or provision an instance
+of Db2 (see \hyperref[further_reading]{,,Further Reading``}). 
+
+If you use Db2 managed services from your web browser, everything is pre-configured and ready to be 
 used, so you can skip directly to the instructions in \hyperref[getting_started]{,,Getting Started``}.
 
-If you connect to a DB2 server or if you want to use dashDB
-remotely, you must first install the appropriate client driver packages. 
-For DB2, the driver packages come with the product.
-For IBM dashDB, they can be downloaded from the dashDB
-web console. After you install the driver packages you must configure
-an ODBC source. Refer to the documentation of your operating
-system for information on how to perform this task. In the following we assume you
-created an ODBC data source called ,,BLUDB``.
-
+If you connect to a Db2 server or if you want to use Db2 remotely, you must first install the appropriate client driver packages. For Db2, they can be downloaded from the web console. After you install the driver packages you must configure an ODBC source. Refer to the documentation of your operating system for information on how to perform this task. In the following we assume you created an ODBC data source called ,,BLUDB``.
 
 \section*{Getting Started}
 \label{getting_started}
@@ -79,7 +82,7 @@ push-down functions of the ibmdbR package, you must connect
 to a database. This is done by
 executing the idaConnect function. Specify the name of
 the ODBC source, the user name and the password as parameters. If you
-use R from the dashDB web console, the following statement will 
+use R from the web console of the Db2 managed services, the following statement will 
 connect you directly to the database BLUDB:
 
 \begin{verbatim}
@@ -115,7 +118,6 @@ idaClose(con)
 
 However, to run the samples in the next sections, we will keep it
 open.
-
 
 \section*{Working with ida.data.frame}
 
@@ -190,7 +192,7 @@ would select only rows for which the column 'Species' equals 'setosa',
 and only the columns 'PetalLength' and'PetalWidth':
 
 \begin{verbatim}
-> iris.ida2 <- iris.ida[iris.ida$Species=='setosa',c('PetalLength','PetalWidth')]
+> iris.ida2 <- iris.ida[iris.ida$Species == 'setosa', c('PetalLength', 'PetalWidth')]
 > dim(iris.ida2)
 [1] 50  2
 \end{verbatim}
@@ -216,8 +218,8 @@ existing ones. These columns are kept locally and are only materialized
 at query time. The following statements show a few examples:
 
 \begin{verbatim}
-> iris.ida$X <- iris.ida$SepalLength+iris.ida$SepalWidth
-> iris.ida$Y <- ifelse((iris.ida$SepalLength>4)&(iris.ida$SepalWidth<3),'a','b')
+> iris.ida$X <- iris.ida$SepalLength + iris.ida$SepalWidth
+> iris.ida$Y <- ifelse((iris.ida$SepalLength > 4) & (iris.ida$SepalWidth < 3), 'a', 'b')
 > iris.ida$Z <- as.character(iris.ida$SepalLength)
 > head(iris.ida)
   SepalLength SepalWidth PetalLength PetalWidth Species   X Y     Z 
@@ -243,7 +245,7 @@ The idaSample function draws a (stratified) sample
 from an \emph{ida.data.frame}. In the following statement, 'Species' is the stratification column.
 
 \begin{verbatim}
-> df <- idaSample(iris.ida,6,'Species')
+> df <- idaSample(iris.ida, 6, 'Species')
 > df
   SepalLength SepalWidth PetalLength PetalWidth    Species   X Y     Z 
 1         6.4        2.7         5.3        1.9  virginica 9.1 a 6.4E0 
@@ -259,7 +261,7 @@ with column or row selection or with defined columns. The following
 example would excludes all rows with 'Species' equal to 'setosa':
 
 \begin{verbatim}
-> df <- idaSample(iris.ida[iris.ida$Species!='setosa',],4,'Species')
+> df <- idaSample(iris.ida[iris.ida$Species!='setosa',], 4, 'Species')
 > df
   SepalLength SepalWidth PetalLength PetalWidth    Species    X Y     Z 
 1         7.1        3.0         5.9        2.1  virginica 10.1 a 7.1E0 
@@ -334,6 +336,144 @@ Objects are written to tables in a serialized format, so even though you
 can see the tables in your schema, you will usually not be able to
 read their contents directly.
 
+\section*{Frequently asked questions}
+\label{faq}
+
+\subsection*{Setting up an ODBC connection on Mac}
+The ibmdbR package uses ODBC to establish a connection between an R session and a Db2 database. The
+following instructions describe how to setup an ODBC connection to Db2 using a Mac that has OS X or macOS as its operating system.
+
+\begin{enumerate}
+
+\item Locale settings
+\begin{itemize}
+  \item[] This setup was tested with \emph{en\_US.UTF-8} as locale setting. The settings can be checked with the \emph{locale} command. To set the locale variables, issue the following commands: 
+  \begin{verbatim}
+export LC_ALL=en_US.UTF-8  
+export LANG=en_US.UTF-8
+\end{verbatim} 
+  The following error message, issued when trying to connect to the database, indicates that the locale settings are set incorrectly: \\
+  \texttt{Driver's SQLAllocHandle on SQL\_HANDLE\_HENV failed}
+\end{itemize}
+
+\item Install unixODBC for example using homebrew
+\begin{itemize}
+  \item[]
+  \begin{verbatim}
+  brew install unixodbc
+  \end{verbatim}
+\end{itemize}
+
+\item Download the Db2 drivers for Mac
+\begin{itemize}
+  \item[] In the Db2 console, open "Connect > Connection information > Driver" and select "Download Db2 driver package".
+\end{itemize}
+  
+\item Install Db2 drivers
+\begin{itemize}
+  \item[] In the terminal enter:
+  \begin{verbatim}
+  cd /Volumes/dsdriver/
+  sudo ./installDSDriver 
+  \end{verbatim}
+\end{itemize}
+
+\item Source the dsdriver scripts to avoid connection validation problems (see \href{http://www-01.ibm.com/support/docview.wss?uid=swg21689403}{SWG21689403})
+\begin{itemize}
+  \item[] In the terminal enter:
+  \begin{verbatim}
+  cd /Applications/dsdriver
+  source db2profile
+  \end{verbatim}
+\end{itemize}
+
+\item Create a DSN and a database driver configuration
+\begin{itemize}
+  \item[] Create or edit the \emph{db2dsdriver.cfg} file with any editor:
+  \begin{verbatim}
+sudo vi /Applications/dsdriver/cfg/db2dsdriver.cfg
+  \end{verbatim}
+  Paste the following code into the db2dsdriver.cfg file:
+    \begin{verbatim}
+<configuration>
+    <dsncollection>
+        <dsn alias="BLUDB" name="BLUDB" host="<host_name>" port="<port>">
+       <parameter name="ExtendedIndicators" value="0"/>
+        </dsn>
+    </dsncollection>
+    <databases>
+        <database name="BLUDB" host="<host_name>" port="<port>">
+        </database>
+    </databases>
+</configuration>
+  \end{verbatim}
+\end{itemize}
+
+\item In the Db2 console, open the connection information and note the host name and port. In the db2dsdriver.cfg file, replace the <host name> and <port> placeholders with the appropriate values.
+
+\item Edit the \emph{odbc.ini} and \emph{odbcinst.ini} files with any editor. Note: If you are using a 64-bit version of R, replace \emph{libdb2o.dylib} in the following entries with \emph{libdb2.dylib}.
+\begin{itemize}
+  \item[] Edit the odbc.ini:
+  \begin{verbatim}
+sudo vi /usr/local/etc/odbc.ini
+  \end{verbatim}
+  Ensure that the file contains at least the following entries:
+    \begin{verbatim}
+[ODBC Data Sources]
+BLUDB = DASHDB
+
+[BLUDB]
+Driver      = /Applications/dsdriver/lib/libdb2o.dylib
+Description = DashDB connection
+DATABASE    = BLUDB
+HOSTNAME    = <host_name>
+PORT        = <port>
+PROTOCOL    = TCPIP
+  \end{verbatim}
+  \item[] Edit the odbcinst.ini:
+    \begin{verbatim}
+sudo vi /usr/local/etc/odbcinst.ini
+  \end{verbatim}
+  Ensure that the file contains at least the following entries:
+    \begin{verbatim}
+[ODBC]
+Trace=0
+TraceFile=/tmp/odbctrace.log
+
+[ODBC Drivers]
+DASHDB = Installed
+
+[DASHDB]
+Driver = /Applications/dsdriver/lib/libdb2o.dylib
+\end{verbatim}
+\end{itemize}
+
+\item Restart your R or RStudio instance
+
+\item Test the connection in R or R-Studio
+\begin{itemize}
+  \item[] Exchange the connection information with your Db2 credentials and run the following script in R:
+  \begin{verbatim}
+library(ibmdbR)
+
+con <- idaConnect("BLUDB", uid = "<username>", pwd = "<password>")
+idaInit(con)
+
+## Create a data frame called mydata based on a given query
+mydata <- idaQuery("select count(*) from sysibm.sysdummy1", as.is=FALSE)
+head(mydata, 1)
+
+idaClose(con)
+  \end{verbatim}
+  The expected output is:
+    \begin{verbatim}
+> head(mydata, 1)
+  1
+1 1
+  \end{verbatim}
+\end{itemize}
+\end{enumerate}
+
 \section*{Further Reading}
 \label{further_reading}
 
@@ -341,10 +481,10 @@ The ibmdbR package allows you to seamlessly scale from small
 data sets to larger data sets, especially ones that no longer fit in
 memory. To learn more about the functionality of the
 package, refer to the reference documentation. Another good starting
-point is (\href{http://www.dashdb.com}{IBM dashDB}),
+point is (\href{https://www.ibm.com/analytics/us/en/technology/cloud-data-services/dashdb/}{IBM Db2 Warehouse Offerings}),
 which allows you to provision a database online within a few minutes.
-It contains many samples that can run online. To learn more about DB2 and how to
+It contains many samples that can run online. To learn more about Db2 and how to
 install ODBC on your client machine, please refer to the 
-\emph{\href{http://www-01.ibm.com/support/knowledgecenter/SSEPGG_10.5.0/com.ibm.db2.luw.kc.doc/welcome.html}{IBM DB2 10.5 Information center}}.
+\emph{\href{https://www.ibm.com/support/knowledgecenter/en/SS6NHC/com.ibm.swg.im.dashdb.kc.doc/welcome.html}{IBM knowledge center}}.
 
 \end{document}

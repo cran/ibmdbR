@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License 
 # along with this program. If not, see <http://www.gnu.org/licenses/>. 
 #
+
 idaParseRFormula <- function(form, idadf){
   if (!is.ida.data.frame(idadf)) 
     stop(simpleError("idadf must be an object of ida.data.frame class"))
@@ -65,10 +66,10 @@ idaParseRFormula <- function(form, idadf){
 
 idaParseGlmRFormula <- function(form, idadf){
   if (!is.ida.data.frame(idadf)) 
-      stop(simpleError("idadf must be an object of ida.data.frame class"))
-
+    stop(simpleError("idadf must be an object of ida.data.frame class"))
+  
   vars = all.vars(form)
-
+  
   # is there a dot?  
   # special case - if there is . in the variable list
   colu = idadf@cols
@@ -87,7 +88,7 @@ idaParseGlmRFormula <- function(form, idadf){
     # only first order variables
     fordervars = sapply(which(order1==1), function(i) vars[tab1[,i]>0])
     fiordervars = sapply(which(order1==1), function(i) which(tab1[,i]>0))
-  
+    
     #
     # only second or higher order variables
     hordervars = sapply(which(order1>=2), function(i) vars[tab1[,i]>0])
@@ -96,7 +97,7 @@ idaParseGlmRFormula <- function(form, idadf){
     if (!all(vars %in% colu))
       stop(simpleError(paste("Some variables are not avaliable in ida.data.frame:", paste(setdiff(vars, colu),collapse=", "))))
   }
-
+  
   
   # or +0 or -1
   addIntercept = attr(terms(form, keep.order=T, data=data.frame(x=1)), "intercept")
@@ -104,22 +105,22 @@ idaParseGlmRFormula <- function(form, idadf){
   
   areFactors = rep(F, length(vars))
   if (length(where.is.dot) == 0) 
-      areFactors   = paste("factor(",vars,")",sep="") %in% rownames(tab1)
+    areFactors   = paste("factor(",vars,")",sep="") %in% rownames(tab1)
   
   # check agains transformations    
   if (length(where.is.dot)>0) {
-  # left side    
-      if (length(form)==3 & !(as.character(form)[2] %in% vars))
-         stop(paste("Error: Variable transformations are not supported."))
+    # left side    
+    if (length(form)==3 & !(as.character(form)[2] %in% vars))
+      stop(paste("Error: Variable transformations are not supported."))
   } else {
     are.not1 <- !(vars %in% rownames(tab1))
     are.not2 <- !(paste("factor(",vars,")",sep="") %in% rownames(tab1))
     are.not <- are.not1 & are.not2 
     if (any(are.not)) {
-       stop(paste("Error: Variable transformations are not supported."))
+      stop(paste("Error: Variable transformations are not supported."))
     }
   }
-
+  
   # create corresponding ida data frame
   indy = unlist(sapply(vars, function(x) which(colu==x, T)))
   list(data=idadf[,indy], intercept=addIntercept, response=isResponse, varlist=vars, areFactors = areFactors, fiordervars = fiordervars, hiordervars = hiordervars)
@@ -130,7 +131,7 @@ idaCreateInputDataView <- function(form,idadf) {
   
   parsedForm <- idaParseRFormula(form, idadf)
   cols <- c(parsedForm$response,parsedForm$cols);
-
+  
   tableDef <- idaTableDef(idadf, F);
   colList <- c()
   for (i in 1:length(cols)) {
@@ -139,7 +140,7 @@ idaCreateInputDataView <- function(form,idadf) {
     else 
       colList <- c(colList, paste("\"", cols[i], "\"", sep=''));
   }
-
+  
   whereNotNull <- paste(sapply(cols, function(x) paste("\"", x, "\" IS NOT NULL", sep='')),collapse=' AND ', sep='');
   
   #if(!is.null(parsedForm$colLevels)) {
@@ -153,13 +154,13 @@ idaCreateInputDataView <- function(form,idadf) {
   #	cols <- c(cols,paste(levCol[1],"_",levCol[2],sep=''));  
   #}
   #}
-
+  
   viewName <- idaGetValidTableName();
   query <- paste("CREATE VIEW ",viewName," AS SELECT ", paste(colList,sep=',',collapse=',')," FROM ",idadf.from(idadf),sep='');
   if (nchar(idadf@where)) {
     query <- paste(query, " WHERE ", idadf@where, " AND ", whereNotNull)
   } else {
-	query <- paste(query, " WHERE ", whereNotNull)
+    query <- paste(query, " WHERE ", whereNotNull)
   }
   
   idaQuery(query);

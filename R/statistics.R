@@ -15,13 +15,10 @@
 # 
 
 ################ idaTable ############################
-idaTable<-function (idadf,max.entries=1000) 
-{
-  
-  
+idaTable<-function (idadf,max.entries=1000) {
   if (!is.ida.data.frame(idadf)) 
     stop(simpleError("idaTable is valid only for ida.data.frame objects"))
-   
+  
   ####### Identifying Categorical Fields #########
   res <- idaTableDef(idadf,F)
   categorical <- as.vector(res[res$valType=='CATEGORICAL','name'])
@@ -83,127 +80,127 @@ idaFactors<-function(idadf,args) {
 
 ########################## cor #####################################################
 setMethod(f="cor", signature=c(x="ida.data.frame"),
-    
-    function(x,y=NULL,use = NULL,method = NULL ) {   
-      
-      # use
-      if (!missing(use) && !is.null(use))
-        stop(simpleError("use option is not implemented yet"))
-      
-      # method
-      if (!missing(method) && !is.null(method))
-        stop(simpleError("method option is not implemented yet"))
-      
-      if(nrow(x)==0) {
-        stop("No rows in ida.data.frame.")
-      }
-      
-      ####### Identifying Numeric Fields #########
-      res <- idaTableDef(x,F)
-      xCols <- as.vector(res[res$valType=='NUMERIC','name'])
-      
-      # Check if any columns are left in the end
-      if (!length(xCols)) 
-        stop("nothing to calculate") 
-      
-      xMean<-idaMean(x,xCols)
-      n<-NROW(x)
-      queryList <- c();
-      
-      
-      if (!missing(y) && !is.null(y)){
-        
-        if (!is.ida.data.frame(y))
-          stop("cor is valid only for ida.data.frame objects")
-        
-        if(idadf.from(x)!= idadf.from(y))
-          stop("x and y must be from the same database table")
-        
-        ####### Identifying Numeric Fields #########
-        res <- idaTableDef(y,F)
-        yCols<- as.vector(res[res$valType=='NUMERIC','name'])
-        
-        
-        # Check if any columns are left in the end
-        if (!length(yCols)) 
-          stop("nothing to calculate") 
-        
-        yMean<-idaMean(y,yCols)
-        
-        for(i in 1:length(xCols)) {
-          for(j in 1:length(yCols)) {
-            queryList <- c(queryList,paste("SUM((", paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")*(", paste("\"", yCols[j], "\"", collapse=",",sep=''),"-",yMean[j],"))/(SQRT(SUM((",paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")*(",paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")))*SQRT(SUM((",paste("\"", yCols[j], "\"", collapse=",",sep=''),"-",yMean[j],")*(",paste("\"", yCols[j], "\"", collapse=",",sep=''),"-",yMean[j],"))))",sep=''));
-          }	
-        }
-      }
-      
-      
-      else{
-        for(i in 1:length(xCols)) {
-          for(j in i:length(xCols)) {
-            queryList <- c(queryList,paste("SUM((", paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")*(", paste("\"", xCols[j], "\"", collapse=",",sep=''),"-",xMean[j],"))/(SQRT(SUM((",paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")*(",paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")))*SQRT(SUM((",paste("\"", xCols[j], "\"", collapse=",",sep=''),"-",xMean[j],")*(",paste("\"", xCols[j], "\"", collapse=",",sep=''),"-",xMean[j],"))))",sep=''));
-          }	
-        }
-        yCols<-xCols
-      }
-      
-      queryList<-paste("SELECT ", paste(queryList,sep=',',collapse=',')," FROM ",idadf.from(x)," ",ifelse(nchar(x@where),paste(" WHERE ",x@where,sep=''),''),sep='');
-      cor<-idaQuery(queryList)
-      mdat <- matrix(1:(length(xCols))*(length(yCols)),nrow=length(xCols),ncol=length(yCols),dimnames = list(c(xCols),c(yCols)),byrow=T)
-      
-      # Arrange matrix values
-      r <- 1;
-      c <- 1;
-      for(i in 1:ncol(cor)) {
-        mdat[r,c] <- cor[[i]][1];
-        if (is.null(y))
-          mdat[c,r] <- mdat[r,c];
-        c <- c + 1;
-        if(c>length(yCols)) {
-          r <- r+1;
-          c <- if (is.null(y)) r else 1
-        }
-      }
-      mdat
-    }
+          
+          function(x,y=NULL,use = NULL,method = NULL ) {   
+            
+            # use
+            if (!missing(use) && !is.null(use))
+              stop(simpleError("use option is not implemented yet"))
+            
+            # method
+            if (!missing(method) && !is.null(method))
+              stop(simpleError("method option is not implemented yet"))
+            
+            if(nrow(x)==0) {
+              stop("No rows in ida.data.frame.")
+            }
+            
+            ####### Identifying Numeric Fields #########
+            res <- idaTableDef(x,F)
+            xCols <- as.vector(res[res$valType=='NUMERIC','name'])
+            
+            # Check if any columns are left in the end
+            if (!length(xCols)) 
+              stop("nothing to calculate") 
+            
+            xMean<-idaMean(x,xCols)
+            n<-NROW(x)
+            queryList <- c();
+            
+            
+            if (!missing(y) && !is.null(y)){
+              
+              if (!is.ida.data.frame(y))
+                stop("cor is valid only for ida.data.frame objects")
+              
+              if(idadf.from(x)!= idadf.from(y))
+                stop("x and y must be from the same database table")
+              
+              ####### Identifying Numeric Fields #########
+              res <- idaTableDef(y,F)
+              yCols<- as.vector(res[res$valType=='NUMERIC','name'])
+              
+              
+              # Check if any columns are left in the end
+              if (!length(yCols)) 
+                stop("nothing to calculate") 
+              
+              yMean<-idaMean(y,yCols)
+              
+              for(i in 1:length(xCols)) {
+                for(j in 1:length(yCols)) {
+                  queryList <- c(queryList,paste("SUM((", paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")*(", paste("\"", yCols[j], "\"", collapse=",",sep=''),"-",yMean[j],"))/(SQRT(SUM((",paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")*(",paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")))*SQRT(SUM((",paste("\"", yCols[j], "\"", collapse=",",sep=''),"-",yMean[j],")*(",paste("\"", yCols[j], "\"", collapse=",",sep=''),"-",yMean[j],"))))",sep=''));
+                }	
+              }
+            }
+            
+            
+            else{
+              for(i in 1:length(xCols)) {
+                for(j in i:length(xCols)) {
+                  queryList <- c(queryList,paste("SUM((", paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")*(", paste("\"", xCols[j], "\"", collapse=",",sep=''),"-",xMean[j],"))/(SQRT(SUM((",paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")*(",paste("\"", xCols[i], "\"", collapse=",",sep=''),"-",xMean[i],")))*SQRT(SUM((",paste("\"", xCols[j], "\"", collapse=",",sep=''),"-",xMean[j],")*(",paste("\"", xCols[j], "\"", collapse=",",sep=''),"-",xMean[j],"))))",sep=''));
+                }	
+              }
+              yCols<-xCols
+            }
+            
+            queryList<-paste("SELECT ", paste(queryList,sep=',',collapse=',')," FROM ",idadf.from(x)," ",ifelse(nchar(x@where),paste(" WHERE ",x@where,sep=''),''),sep='');
+            cor<-idaQuery(queryList)
+            mdat <- matrix(1:(length(xCols))*(length(yCols)),nrow=length(xCols),ncol=length(yCols),dimnames = list(c(xCols),c(yCols)),byrow=T)
+            
+            # Arrange matrix values
+            r <- 1;
+            c <- 1;
+            for(i in 1:ncol(cor)) {
+              mdat[r,c] <- cor[[i]][1];
+              if (is.null(y))
+                mdat[c,r] <- mdat[r,c];
+              c <- c + 1;
+              if(c>length(yCols)) {
+                r <- r+1;
+                c <- if (is.null(y)) r else 1
+              }
+            }
+            mdat
+          }
 )
 
 ########################## sd #############################################################
 setMethod(f="sd", signature=c(x="ida.data.frame"),
-    function(x,na.rm=NULL) { 
-      idadf<-x 
-      
-      # na.rm
-      if (!missing(na.rm) && !is.null(na.rm))
-        warning("Missing values are not removed before computation")
-      
-      if(nrow(x)==0) {
-        stop("No rows in ida.data.frame.")
-      }
-      
-      col<-idadf@cols
-      if(length(col)>1)
-        warning("the condition has length > 1 and only the first numeric element will be used")
-      
-      queryList <- c();
-      
-      ####### Identifying Numeric Fields #########
-      res <- idaTableDef(idadf,F)
-      numeric <- as.vector(res[res$valType=='NUMERIC','name'])
-      
-      col<-numeric[1];
-      
-      # Check if any column is left
-      if (!length(col)) 
-        stop("nothing to calculate") 
-      
-      n<-NROW(idadf)
-      mean<-idaMean(idadf,col)
-      queryList <-paste("SUM((", paste("\"", col, "\"", collapse=",",sep=''),"-",mean,")*(",paste("\"", col, "\"", collapse=",",sep=''),"-",mean,"))/",n-1,sep='');
-      queryList<-paste("SELECT ", queryList," FROM ",idadf.from(idadf)," ",ifelse(nchar(idadf@where),paste(" WHERE ",idadf@where,sep=''),''),sep='');
-      sd<-sqrt(idaQuery(queryList))
-      return(sd[1,1])
-    }
+          function(x,na.rm=NULL) { 
+            idadf<-x 
+            
+            # na.rm
+            if (!missing(na.rm) && !is.null(na.rm))
+              warning("Missing values are not removed before computation")
+            
+            if(nrow(x)==0) {
+              stop("No rows in ida.data.frame.")
+            }
+            
+            col<-idadf@cols
+            if(length(col)>1)
+              warning("the condition has length > 1 and only the first numeric element will be used")
+            
+            queryList <- c();
+            
+            ####### Identifying Numeric Fields #########
+            res <- idaTableDef(idadf,F)
+            numeric <- as.vector(res[res$valType=='NUMERIC','name'])
+            
+            col<-numeric[1];
+            
+            # Check if any column is left
+            if (!length(col)) 
+              stop("nothing to calculate") 
+            
+            n<-NROW(idadf)
+            mean<-idaMean(idadf,col)
+            queryList <-paste("SUM((", paste("\"", col, "\"", collapse=",",sep=''),"-",mean,")*(",paste("\"", col, "\"", collapse=",",sep=''),"-",mean,"))/",n-1,sep='');
+            queryList<-paste("SELECT ", queryList," FROM ",idadf.from(idadf)," ",ifelse(nchar(idadf@where),paste(" WHERE ",idadf@where,sep=''),''),sep='');
+            sd<-sqrt(idaQuery(queryList))
+            return(sd[1,1])
+          }
 )
 
 ########################## cov #############################################################
@@ -292,9 +289,9 @@ idacov<-function(x,y=NULL,use = NULL,method = NULL ) {
 
 ########################## idaVar #############################################################
 setMethod(f="var", signature=c(x="ida.data.frame"),
-    function(x,y=NULL,na.rm=NULL,use=NULL) {
-      idacov(x,y) 
-    }
+          function(x,y=NULL,na.rm=NULL,use=NULL) {
+            idacov(x,y) 
+          }
 )
 
 ###############################################################################################
@@ -310,34 +307,34 @@ setMethod("cov", signature(x="ida.data.frame", y="ida.data.frame"), cov.ida.data
 ############################### summary ###############################################################
 
 setMethod(f="summary", signature=c("ida.data.frame"),
-    function (object,digits=max(3L, getOption("digits") -3L), maxsum = 7L, ...) {
-      idadf<-object
-          
-      options(scipen=999)
-      
-      ####### Identifying Categorical Fields #########
-      res <- idaTableDef(idadf,F)
-      numeric <- as.vector(res[res$valType=='NUMERIC','name'])
-      categorical <- as.vector(res[res$valType=='CATEGORICAL','name'])
-      
-      ####### Calculating Summary Values #############
-      catRes<-idaCategorical(idadf,categorical,maxsum) 
-      maxsum<-max(7,maxsum)
-      quantiles <- idaQuantiles(idadf,numeric,maxsum,digits)
-      
-      final<-c(quantiles,catRes)
-      final<-final[intersect(idadf@cols,c(numeric,categorical))]
-      final<-unlist(final)
-      dim(final) <- c(maxsum, length(numeric)+length(categorical))
-      
-      ####### Naming the summary columns ############
-      blanks <- paste(character(max(10, na.rm = TRUE) + 2L),collapse = " ")
-      pad <- floor(nchar(final[1,])/2 - nchar(intersect(idadf@cols,c(numeric,categorical)))/2)
-      names <- paste0(substring(blanks, 1, pad), intersect(idadf@cols,c(numeric,categorical)))
-      dimnames(final)<-list(rep.int("",maxsum),names)
-      attr(final, "class") <- c("table")
-      final		
-    }
+          function (object,digits=max(3L, getOption("digits") -3L), maxsum = 7L, ...) {
+            idadf<-object
+            
+            options(scipen=999)
+            
+            ####### Identifying Categorical Fields #########
+            res <- idaTableDef(idadf,F)
+            numeric <- as.vector(res[res$valType=='NUMERIC','name'])
+            categorical <- as.vector(res[res$valType=='CATEGORICAL','name'])
+            
+            ####### Calculating Summary Values #############
+            catRes<-idaCategorical(idadf,categorical,maxsum) 
+            maxsum<-max(7,maxsum)
+            quantiles <- idaQuantiles(idadf,numeric,maxsum,digits)
+            
+            final<-c(quantiles,catRes)
+            final<-final[intersect(idadf@cols,c(numeric,categorical))]
+            final<-unlist(final)
+            dim(final) <- c(maxsum, length(numeric)+length(categorical))
+            
+            ####### Naming the summary columns ############
+            blanks <- paste(character(max(10, na.rm = TRUE) + 2L),collapse = " ")
+            pad <- floor(nchar(final[1,])/2 - nchar(intersect(idadf@cols,c(numeric,categorical)))/2)
+            names <- paste0(substring(blanks, 1, pad), intersect(idadf@cols,c(numeric,categorical)))
+            dimnames(final)<-list(rep.int("",maxsum),names)
+            attr(final, "class") <- c("table")
+            final		
+          }
 )
 
 

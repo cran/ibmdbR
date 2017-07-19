@@ -1,19 +1,27 @@
 Package: ibmdbR
-Version: 1.48.0
+Version: 1.49.0
 Title: IBM in-Database Analytics for R
-Author: IBM Corporation
+Author: Alexander Eckert [aut, cre], Toni Bollinger [aut], Michael Wurst [aut], Craig Blaha [ctb] (documentation), IBM Corporation [cph]
+Authors@R: c(
+    person("Alexander", "Eckert", role = c("aut", "cre"), email = "inza@de.ibm.com"),
+    person("Toni", "Bollinger", role = c("aut")),
+    person("Michael", "Wurst", role = c("aut")),
+    person("Craig", "Blaha", role = c("ctb"), comment = "documentation"),
+    person("IBM Corporation", role = c("cph"), email = "inza@de.ibm.com")
+    )
 Maintainer: Alexander Eckert <inza@de.ibm.com>
 Depends: R (>= 2.15.1), methods, RODBC, Matrix, arules
 Imports: MASS, rpart, rpart.plot, ggplot2
-Description: Functionality required to efficiently use R with
-        IBM DB2(C) for Linux, Unix and Windows, IBM dashDB(C) as well as 
-        DB2 for z/OS (C) in conjunction with IBM DB2 Analytics Accelerator (C).
+Description: 
+        Functionality required to efficiently use R with IBM(R) Db2(R) 
+        Warehouse offerings (formerly IBM dashDB(R)) and IBM Db2 for z/OS(R) in 
+        conjunction with IBM Db2 Analytics Accelerator for z/OS. 
         Many basic and complex R operations are pushed down into the database, 
         which removes the main memory boundary of R and allows to make full 
-        use of parallel processing in the underlying database. 
+        use of parallel processing in the underlying database.
 License: GPL-3
 LazyLoad: Yes
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2016-10-17 00:47:42
-Packaged: 2016-10-16 13:45:40 UTC; root
+Packaged: 2017-07-19 14:49:51 UTC; alexander
+Date/Publication: 2017-07-19 16:00:25 UTC

@@ -18,38 +18,38 @@
 ################ Stats ############################
 
 setMethod("mean", signature(x="ida.data.frame"),
-    function(x) {
-      query <- paste(paste("AVG(\"", x@cols, "\") AS ", x@cols, collapse=",",sep=''),
-          " FROM ", idadf.from(x))
-      if (nchar(x@where)) {
-        query <- paste(query, " WHERE ", x@where)
-      }
-      return(idaQuery ("SELECT ", query))
-    }
+          function(x) {
+            query <- paste(paste("AVG(\"", x@cols, "\") AS ", x@cols, collapse=",",sep=''),
+                           " FROM ", idadf.from(x))
+            if (nchar(x@where)) {
+              query <- paste(query, " WHERE ", x@where)
+            }
+            return(idaQuery ("SELECT ", query))
+          }
 )
 
 
 setMethod("min", signature(x="ida.data.frame"),
-    function(x) {
-      query <- paste(paste("MIN(\"", x@cols, "\") AS ", x@cols, collapse=",",sep=''),
-          " FROM ", idadf.from(x))
-      if (nchar(x@where)) {
-        query <- paste(query, " WHERE ", x@where)
-      }
-      return(idaQuery ("SELECT ", query))
-    }
+          function(x) {
+            query <- paste(paste("MIN(\"", x@cols, "\") AS ", x@cols, collapse=",",sep=''),
+                           " FROM ", idadf.from(x))
+            if (nchar(x@where)) {
+              query <- paste(query, " WHERE ", x@where)
+            }
+            return(idaQuery ("SELECT ", query))
+          }
 )
 
 
 setMethod("max", signature(x="ida.data.frame"),
-    function(x) {
-      query <- paste(paste("MAX(\"", x@cols, "\") AS ", x@cols, collapse=",",sep=''),
-          " FROM ", idadf.from(x))
-      if (nchar(x@where)) {
-        query <- paste(query, " WHERE ", x@where)
-      }
-      return(idaQuery ("SELECT ",query))
-    }
+          function(x) {
+            query <- paste(paste("MAX(\"", x@cols, "\") AS ", x@cols, collapse=",",sep=''),
+                           " FROM ", idadf.from(x))
+            if (nchar(x@where)) {
+              query <- paste(query, " WHERE ", x@where)
+            }
+            return(idaQuery ("SELECT ",query))
+          }
 )
 
 
@@ -72,66 +72,66 @@ setMethod("hist", signature(x="ida.data.frame"), hist.ida.data.frame)
 ################ Basic ############################
 
 setMethod("dim", signature(x="ida.data.frame"),
-    function(x) {
-      rowsno <- idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM ",
-          idadf.from(x), ifelse(nchar(x@where), paste(" WHERE ", x@where), ""))
-      
-      # Integers are 32bit in R, there are tables with more rows than that
-      # In this case, we need to return double instead
-      if(as.integer(rowsno) == as.numeric(rowsno)){	
-        return(c(as.integer(rowsno), length(x@cols)))
-      } else {
-        return(c(as.double(rowsno), length(x@cols)))
-      }	
-    }
+          function(x) {
+            rowsno <- idaScalarQuery("SELECT CAST(COUNT(*) AS INTEGER) FROM ",
+                                     idadf.from(x), ifelse(nchar(x@where), paste(" WHERE ", x@where), ""))
+            
+            # Integers are 32bit in R, there are tables with more rows than that
+            # In this case, we need to return double instead
+            if(as.integer(rowsno) == as.numeric(rowsno)){	
+              return(c(as.integer(rowsno), length(x@cols)))
+            } else {
+              return(c(as.double(rowsno), length(x@cols)))
+            }	
+          }
 )
 
 # ---------------------------------------------------------------------
 
 setMethod("length", signature(x="ida.data.frame"),
-    function(x) { return(length(x@cols)) }
+          function(x) { return(length(x@cols)) }
 )
 
 # ---------------------------------------------------------------------
 
 setMethod("NROW", signature(x="ida.data.frame"),
-    function(x) { return(nrow(x)) }
+          function(x) { return(nrow(x)) }
 )
 
 # ---------------------------------------------------------------------
 
 setMethod("NCOL", signature(x="ida.data.frame"),
-    function(x) { return(ncol(x)) }
+          function(x) { return(ncol(x)) }
 )
 
 # ---------------------------------------------------------------------
 
 setMethod("colnames", signature(x="ida.data.frame"),
-    function(x) { x@cols }
+          function(x) { x@cols }
 )
 
 # ---------------------------------------------------------------------
 setMethod("head", signature(x="ida.data.frame"),
-    function(x, n = 6, ...) {
-      if (n >= 0) {
-        ans <- idaQuery(idadf.query(x), " FETCH FIRST ", format(n, scientific = FALSE), " ROWS ONLY");
-        
-        if (nrow(ans) > 0) rownames(ans) <- 1:nrow(ans);
-        return(ans)
-      } else {
-        nr <- nrow(x)
-        n <- abs(n)
-        ans <- idaQuery(idadf.query(x), " FETCH FIRST ", format(nr - n, scientific = FALSE), " ROWS ONLY")
-        
-        if ((nr-n) != 0) rownames(ans) <- 1:(nr-n);
-        return(ans)
-      }
-    }
+          function(x, n = 6, ...) {
+            if (n >= 0) {
+              ans <- idaQuery(idadf.query(x), " FETCH FIRST ", format(n, scientific = FALSE), " ROWS ONLY");
+              
+              if (nrow(ans) > 0) rownames(ans) <- 1:nrow(ans);
+              return(ans)
+            } else {
+              nr <- nrow(x)
+              n <- abs(n)
+              ans <- idaQuery(idadf.query(x), " FETCH FIRST ", format(nr - n, scientific = FALSE), " ROWS ONLY")
+              
+              if ((nr-n) != 0) rownames(ans) <- 1:(nr-n);
+              return(ans)
+            }
+          }
 )
 
 
 # ---------------------------------------------------------------------
 
 setMethod("names", signature(x="ida.data.frame"),
-    function(x) { return(x@cols) }
+          function(x) { return(x@cols) }
 )
