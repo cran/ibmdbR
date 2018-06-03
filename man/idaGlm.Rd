@@ -35,14 +35,16 @@ idaGlm(	form, data, id = "id", intercept = T, family = "bernoulli", family_param
 
 \arguments{
     \item{form}{A \code{formula} object that describes the GLM to build.}
-    \item{data}{An \code{nz.data.frame} object that stores the data to be used for GLM building.}
+    \item{data}{An \code{ida.data.frame} object that stores the data to be used for GLM building.}
     \item{id}{The ID column name.}
     \item{intercept}{The intercept.}
 	\item{family}{The type of error distribution. It can have one of the follwing values: 
 	      "bernoulli", "gaussian", "poisson", "binomial", "negativebinomial", "wald", "gamma"}
 	\item{family_param}{A family-specific parameter.}
-	\item{link}{Type of link function. It can have one of the follwoing values:}
-	           "logit", "canbinom", "cangeom", "cannegbinom", "cauchit", "clog", "cloglog", "gaussit", "identity", "inverse", "invnegative", "invsquare", "log", "loglog", "oddspower", "power", "probit", "sqrt"
+	\item{link}{Type of the link function. It can have one of the follwoing values:}
+	"clog", "cloglog", "gaussit", "identity", "log", "logit", "oddspower", "power", "probit", and "sqrt".
+	For Db2 for z/OS it can have the following values as well:
+	           "canbinom", "cangeom", "cannegbinom", "cauchit", "inverse", "invnegative", "invsquare", "loglog" .
 	\item{link_param}{Link parameter, 1 by default.}
 	\item{maxit}{Maximum number of iterations. 20 by default.}
 	\item{eps}{Maximum (relative) error used as a stopping criterion. This should be sufficiently small for the algorithm to work.}
@@ -50,7 +52,7 @@ idaGlm(	form, data, id = "id", intercept = T, family = "bernoulli", family_param
 	\item{method}{Computing algorithm: either \code{"irls"} ("iteratively reweighted least square") or \code{"psgd"} ("parallel stochastic gradient descent").}
 	\item{trials}{The input table column containing the number of trials for the binominal distribution. Ignored unless family is 'binomial'.}
 	\item{incolumn}{Overwrite automatic creation of incolumn parameter and specify your own incolumn here.}
-	\item{interaction}{Overwrite automatic creation of interaction parameter and specify your own incolumn here.}
+	\item{interaction}{Overwrite automatic creation of interaction parameter and specify your own interaction here.}
     \item{modelname}{Name of the model that will be created in the database. Will be created automatically if not specified.}
 	\item{format}{Specify output format. Either \code{"glm"} for output looking like \code{stats::glm} or \code{raw} for downloading all results as \code{data.frame}s.}
 	\item{raw.resid}{If \code{format} equals \code{"raw"}, whether to download the residuals or return \code{NULL} instead.}
@@ -88,7 +90,7 @@ iris2$isSetosa <- ifelse(iris2$Species=="setosa", 1, 0)
 idf <-as.ida.data.frame(iris2, table="IRIS2", clear.existing=T, rownames="ID")
 
 #Calculate GLM model in-db
-glm <- idaGlm(isSetosa~PetalLength+SepalLength*SepalWidth+PetalWidth, idf2, id="ID")
+glm <- idaGlm(isSetosa~PetalLength+SepalLength*SepalWidth+PetalWidth, idf, id="ID")
 
 #Print the model
 print(glm)

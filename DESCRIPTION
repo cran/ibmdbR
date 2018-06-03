@@ -1,17 +1,22 @@
 Package: ibmdbR
-Version: 1.49.0
+Version: 1.50.0
 Title: IBM in-Database Analytics for R
-Author: Alexander Eckert [aut, cre], Toni Bollinger [aut], Michael Wurst [aut], Craig Blaha [ctb] (documentation), IBM Corporation [cph]
+Author: Toni Bollinger [aut, cre],
+  Alexander Eckert [aut],
+  Michael Wurst [aut],
+  Craig Blaha [ctb] (documentation),
+  IBM Corporation [cph]
 Authors@R: c(
-    person("Alexander", "Eckert", role = c("aut", "cre"), email = "inza@de.ibm.com"),
-    person("Toni", "Bollinger", role = c("aut")),
+    person("Toni", "Bollinger", role = c("aut", "cre"), email = "db2-analytics@de.ibm.com"),
+    person("Alexander", "Eckert", role = c("aut")),
     person("Michael", "Wurst", role = c("aut")),
     person("Craig", "Blaha", role = c("ctb"), comment = "documentation"),
     person("IBM Corporation", role = c("cph"), email = "inza@de.ibm.com")
     )
-Maintainer: Alexander Eckert <inza@de.ibm.com>
+Maintainer: Toni Bollinger <db2-analytics@de.ibm.com>
 Depends: R (>= 2.15.1), methods, RODBC, Matrix, arules
 Imports: MASS, rpart, rpart.plot, ggplot2
+Suggests: SparkR
 Description: 
         Functionality required to efficiently use R with IBM(R) Db2(R) 
         Warehouse offerings (formerly IBM dashDB(R)) and IBM Db2 for z/OS(R) in 
@@ -23,5 +28,5 @@ License: GPL-3
 LazyLoad: Yes
 NeedsCompilation: no
 Repository: CRAN
-Packaged: 2017-07-19 14:49:51 UTC; alexander
-Date/Publication: 2017-07-19 16:00:25 UTC
+Packaged: 2018-05-14 08:35:39 UTC; toni
+Date/Publication: 2018-06-03 15:17:31 UTC

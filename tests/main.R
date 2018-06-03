@@ -20,7 +20,6 @@ runone <- function(f)
     res <- tools:::Rdiff(outfile, savefile, TRUE)
     if (!res) message(" OK")
   }
-  0L
 }
 
 runone("common")
@@ -28,6 +27,9 @@ runone("common")
 if(nzchar(Sys.getenv("IBMDBR_TESTING"))) {
   if(Sys.getenv("IBMDBR_TESTING")=="DB2WAREHOUSE") {
     runone("db2warehouse")
+    if(dir.exists("/opt/ibm/dashdb_spark/spark")) {
+      runone("db2spark")
+    }
   } else {
     runone("db2")
   }

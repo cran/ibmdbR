@@ -24,8 +24,9 @@
 \description{This function generates a two step clustering model based on the contents of an IDA data frame (\code{\link{ida.data.frame}}).	
 }
 \usage{
-idaTwoStep( data, id, k=3, maxleaves=1000, distance="euclidean", outtable=NULL, 
-            randseed=12345, statistics=NULL, modelname=NULL)
+idaTwoStep( data, id, k = 3, maxleaves = 1000, distance = "euclidean", outtable = NULL,
+            randseed = 12345, statistics = NULL, maxk = 20, nodecapacity = 6,
+            leafcapacity = 8, outlierfraction = 0, modelname = NULL)
 
 \method{print}{idaTwoStep}(x,...)  
 \method{predict}{idaTwoStep}(object, newdata, id,...)  
@@ -37,13 +38,24 @@ idaTwoStep( data, id, k=3, maxleaves=1000, distance="euclidean", outtable=NULL,
 	\item{id}{The name of the column that contains a unique ID for each row of the input data.}
 	\item{k}{The number of clusters to be calculated.} 
 	\item{maxleaves}{The maximum number of leaf nodes in the initial clustering tree. When the tree contains maxleaves 
-	leaf nodes, the following data records are aggregated into clusters associated with the existing leaf nodes.}
+	leaf nodes, the following data records are aggregated into clusters associated with the existing leaf nodes.
+	This parameter is available for Db2 for z/OS only and ignored for Db2 Warehouse with integrated Spark.}
+	\item{maxk}{The maximum number of clusters that can be determined automatically.}
+  \item{nodecapacity}{The branching factor of the internal tree that is used in pass 1.
+  Each node can have up to <nodecapacity> subnodes. }
+  This parameter is available for Db2 Warehouse with integrated Spark only and ignored for Db2 for z/OS.
+  \item{leafcapacity}{The number of clusters per leaf node in the internal tree that is used in pass 1.
+  This parameter is available for Db2 Warehouse with integrated Spark only and ignored for Db2 for z/OS.}
+  \item{outlierfraction}{The fraction of the records that is to be considered as outlier in the internal tree that is used in pass 1.
+  Clusters that contain less than <outlierfraction> times the mean number of data records per cluster are removed.
+  This parameter is available for Db2 Warehouse with integrated Spark only and ignored for Db2 for z/OS.}
 	\item{distance}{The distance function that is to be used. This can be set to \code{"euclidean"}, which 
 	causes the squared Euclidean distance to be used, or \code{"norm_euclidean"}, which causes normalized euclidean distance to be used.}
 	\item{outtable}{The name of the output table that is to contain the results of the operation. When NULL 
 	is specified, a table name is generated automatically.} 
 	\item{randseed}{The seed for the random number generator.}
-	\item{statistics}{Denotes which statistics to calculate. Allowed values are \code{"none"},\code{"columns"} and \code{"all"}. If NULL, the default of the database system will be used.}
+	\item{statistics}{Denotes which statistics to calculate. Allowed values are \code{"none"},\code{"columns"} and \code{"all"}.
+  If NULL, the default of the database system will be used.}
 	\item{modelname}{The name under which the model is stored in the database.
 	This is the name that is specified when using functions such as \code{\link{idaRetrieveModel}} or \code{\link{idaDropModel}}.}
 	\item{object}{An object of the class \code{idaTwoStep} to be used for prediction, i.e. for applying it to new data.} 

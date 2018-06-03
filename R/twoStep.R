@@ -1,5 +1,5 @@
 # 
-# Copyright (c) 2010, 2014, 2016 IBM Corp. All rights reserved. 
+# Copyright (c) 2010, 2014, 2016, 2018 IBM Corp. All rights reserved.
 #     
 # This program is free software: you can redistribute it and/or modify 
 # it under the terms of the GNU General Public License as published by 
@@ -15,20 +15,23 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>. 
 #
 
-idaTwoStep <- function(
-  data,
-  id,
-  k=3,
-  maxleaves=1000, 
-  distance="euclidean",
-  outtable=NULL,
-  randseed=12345,
-  statistics=NULL,
-  modelname=NULL) {
+idaTwoStep <- function( data,
+                        id,
+                        k=3,
+                        maxleaves=1000,
+                        distance="euclidean",
+                        outtable=NULL,
+                        randseed=12345,
+                        statistics=NULL,
+                        maxk=20,
+                        nodecapacity=6,
+                        leafcapacity=8,
+                        outlierfraction=0.0,
+                        modelname=NULL) {
   
-  if(!idaIsDb2z()) {
-    stop("idaTwoStep is only available for DB2 for z/OS, yet.")
-  }
+  # if(!idaIsDb2z()) {
+  # stop("idaTwoStep is only available for DB2 for z/OS, yet.")
+  # }
   if(!idaCheckProcedure("TWOSTEP","idaTwoStep",F)) {
     stop("Function not available.")
   }
@@ -53,16 +56,21 @@ idaTwoStep <- function(
     
     xx <- parseTableName(modelName);
     if (idaIsDb2z()) {
-      model <- paste('"',xx$table,'"',sep=''); 	
+      model <- paste('"',xx$table,'"',sep='');
     } else {
-      model <- paste('"',xx$schema,'"."',xx$table,'"',sep=''); 	
+      model <- paste('"',xx$schema,'"."',xx$table,'"',sep='');
     }
   }
-  
+
+  if (!idaIsDb2z() && !idaIsRegularTable(data@table) && !is.null(data@where)) {
+    stop(simpleError("Only IDA data frames on regular tables without where-conditions are supported for idaTwoStep."))
+  }
+
   if (!is.null(outtable)&&idaExistTable(outtable)) {
     stop("Outtable name already exists.")
   }
-  
+
+
   tmpView <- idaCreateView(data)
   
   tmpOuttable <- NULL
@@ -70,29 +78,53 @@ idaTwoStep <- function(
     tmpOuttable <- idaGetValidTableName(prefix = "IDAR_OUTTABLE_")
     outtable <- tmpOuttable
   }
-  
-  tryCatch({	
-    res <- callSP("TWOSTEP",
-                  model=model,
-                  intable=tmpView,
-                  k=k,
-                  maxleaves=maxleaves,
-                  outtable=outtable,
-                  distance=distance,
-                  id=id,
-                  randseed=randseed,
-                  statistics=statistics)
-    actual.k <- as.numeric(res[1,1])
-  }, error = function(e) {
-    # in case of error, let user know what happend
-    stop(e)
-  }, finally = {
-    # drop view
-    idaDropView(tmpView)
-    if (!is.null(tmpOuttable)) {
-      idaDeleteTable(tmpOuttable)
+
+  tryCatch({
+        if (idaIsDb2z()) {
+          res <- callSP("TWOSTEP",
+                        model=model,
+                        intable=tmpView,
+                        k=k,
+                        maxleaves=maxleaves,
+                        outtable=outtable,
+                        distance=distance,
+                        id=id,
+                        randseed=randseed,
+                        statistics=statistics)
+        } else {
+          incolumns <- paste( sapply(colu,
+                                    function(c){
+                                      if (c==id.no.quotes) {
+                                        paste('"', c,'"', ":id", sep="")
+                                      } else {
+                                        paste('"', c, '"', ":input", sep="")
+                                      }
+                                    }),
+                              collapse=";")
+          res <- callSP("TWOSTEP",
+                        model=model,
+                        intable=data@table,
+                        k=k,
+                        maxk=maxk,
+                        nodecapacity=nodecapacity,
+                        leafcapacity=leafcapacity,
+                        outlierfraction=outlierfraction,
+                        outtable=outtable,
+                        distance=distance,
+                        id=id,
+                        incolumn=incolumns,
+                        randseed=randseed)
+        }
+    }, error = function(e) {
+      # in case of error, let user know what happend
+      stop(e)
+    }, finally = {
+      # drop view
+      idaDropView(tmpView)
+      if (!is.null(tmpOuttable)) {
+        idaDeleteTable(tmpOuttable)
+      }
     }
-  }
   )
   
   result <- idaRetrieveTwoStepModel(model);
@@ -113,48 +145,50 @@ idaRetrieveTwoStepModel <- function(modelName) {
   columnStatsColList <- "CLUSTERID, COLUMNNAME, CARDINALITY, MODE, MINIMUM,  MAXIMUM, MEAN, VARIANCE, VALIDFREQ, MISSINGFREQ, INVALIDFREQ, IMPORTANCE"; 
   
   if(idaIsDb2z()) {
-    
+     
     exportModelTable <- idaGetValidTableName(prefix = "IDAR_MODEL_TABLE_")
     
-    tryCatch({	
-      res <- callSP("EXPORT_MODEL_TO_TABLE", model=modelName, outtable=exportModelTable)
-      model1 <- paste('SELECT ', columnsColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Columns\'',sep="")
-      columns <- idaQuery(model1)
-      
-      model2 <- paste('SELECT ', modelColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Model\'',sep="")
-      modelMain <- idaQuery(model2)
-      
-      model3 <- paste('SELECT ', clustersColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Clusters\'',sep="")
-      kmOutStat <- idaQuery(model3)
-      
-      model4 <- paste('SELECT ', columnStatsColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Column Statistics\'',sep="")
-      kols <- idaQuery(model4)
+    tryCatch({
+        res <- callSP("EXPORT_MODEL_TO_TABLE", model=modelName, outtable=exportModelTable)
+        model1 <- paste('SELECT ', columnsColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Columns\'',sep="")
+        columns <- idaQuery(model1)
+  
+        model2 <- paste('SELECT ', modelColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Model\'',sep="")
+        modelMain <- idaQuery(model2)
+  
+        model3 <- paste('SELECT ', clustersColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Clusters\'',sep="")
+        kmOutStat <- idaQuery(model3)
+  
+        model4 <- paste('SELECT ', columnStatsColList, ' FROM ', exportModelTable,' where MODELUSAGE= \'Column Statistics\'',sep="")
+        kols <- idaQuery(model4)
+
+        contCols <- columns[columns$USAGETYPE=='active'&columns$OPTYPE=='continuous','COLUMNNAME']
+        catCols <- columns[columns$USAGETYPE=='active'&columns$OPTYPE=='categorical','COLUMNNAME']
     }, error = function(e) {
-      # in case of error, let user know what happend
-      stop(e)
+        # in case of error, let user know what happend
+        stop(e)
     }, finally = {
-      idaDeleteTable(exportModelTable)
-    }
-    )
-    
+        idaDeleteTable(exportModelTable)
+    })
+
   } else {
     model1 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMNS"',sep="")
     columns <- idaQuery(model1)
-    
+  
     model2 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_MODEL"',sep="")
     modelMain <- idaQuery(model2)
-    
+  
     model3 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_CLUSTERS"',sep="")
     kmOutStat <- idaQuery(model3)
-    
+  
     model4 <- paste('SELECT * FROM "',modelSchema,'"."',model,'_COLUMN_STATISTICS"',sep="")
     kols <- idaQuery(model4)
+
+    # USAGETYPE not included in IDAX two step models
+    contCols <- columns[columns$OPTYPE=='continuous','COLUMNNAME']
+    catCols <- columns[columns$OPTYPE=='categorical','COLUMNNAME']
   }
-  
-  
-  contCols <- columns[columns$USAGETYPE=='active'&columns$OPTYPE=='continuous','COLUMNNAME']
-  catCols <- columns[columns$USAGETYPE=='active'&columns$OPTYPE=='categorical','COLUMNNAME']
-  
+
   k <- modelMain[1,4]
   distance <- modelMain[1,3]	
   
@@ -167,15 +201,16 @@ idaRetrieveTwoStepModel <- function(modelName) {
   kols <- kols[order(kols[,1], kols[,2]),]
   
   cents  <- data.frame(CLUSTERID=1:k)
-  
-  if(length(contCols)>0)
+
+  if(length(contCols)>0) {
     for(i in 1:length(contCols)) {
-      cents[contCols[i]]<-kols[kols$COLUMNNAME==contCols[i],7]
+      cents[ contCols[i] ] <-kols[kols$COLUMNNAME==contCols[i],7]
     }
-  
+  }
+
   if(length(catCols)>0)
     for(i in 1:length(catCols)) {
-      cents[catCols[i]]<-kols[kols$COLUMNNAME==catCols[i],4]
+      cents[ catCols[i] ]<-kols[kols$COLUMNNAME==catCols[i],4]
     }
   
   kmOutStat <- kmOutStat[order(kmOutStat[,1]),]
@@ -183,12 +218,12 @@ idaRetrieveTwoStepModel <- function(modelName) {
   cluster <- NULL;
   
   tmp = list(
-    cluster=cluster,
-    centers=cents, 
-    withinss=kmOutStat$WITHINSS,
-    size=kmOutStat$SIZE,
-    distance=distance,
-    model=model
+      cluster=cluster,
+      centers=cents, 
+      withinss=kmOutStat$WITHINSS,
+      size=kmOutStat$SIZE,
+      distance=distance,
+      model=model
   )
   
   class(tmp) = c("idaTwoStep", "twostep")
@@ -217,30 +252,40 @@ print.idaTwoStep <- function (x, ...) {
 
 predict.idaTwoStep <- function(object, newdata, id,...) {
   
-  newData <- newdata
   outtable <- idaGetValidTableName(paste("PREDICT_",sep=""))
-  
-  colu = newData@cols
+
+  if (!idaIsDb2z() && !idaIsRegularTable(newdata@table) && !is.null(newdata@where)) {
+    stop(simpleError("Only IDA data frames on regular tables without where-conditions are supported for predict.idaTwoStep."))
+  }
+
+  colu = newdata@cols
   if (!(id %in% colu))
     stop(simpleError(paste("Id variable is not available in ida.data.frame:", id)))
-  
+
   id  <- paste('\"',id,'\"',sep="")
-  tmpView <- idaCreateView(newData)
-  
-  tryCatch({	
-    callSP("PREDICT_TWOSTEP",
-           model=object$model,
-           intable=tmpView,
-           id=id,
-           outtable=outtable,
-           ...)
-  }, error = function(e) {
-    # in case of error, let user know what happend
-    stop(e)
-  }, finally = {
-    # drop view
-    idaDropView(tmpView)
+
+  tmpView <- idaCreateView(newdata)
+
+  if (idaIsDb2z()) {
+    inTableView <- tmpView
+  } else {
+    inTableView <- newdata@table
   }
+
+  tryCatch({
+        callSP("PREDICT_TWOSTEP",
+            model=object$model,
+            intable=inTableView,
+            id=id,
+            outtable=outtable,
+            ...)
+      }, error = function(e) {
+        # in case of error, let user know what happend
+        stop(e)
+      }, finally = {
+        # drop view
+        idaDropView(tmpView)
+      }
   )
   
   object.pred <- ida.data.frame(outtable)

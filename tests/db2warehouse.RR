@@ -1,5 +1,5 @@
 library(ibmdbR)
-conx <- idaConnect("DASHDB","","")
+conx <- idaConnect("BLUDB","","")
 idaInit(conx)
 
 #Add an ID column to iris
@@ -32,7 +32,8 @@ pred <- predict(km,idf,id="ID")
 
 #Inspect the predictions
 head(pred)
-	
+idaDropModel("KMEANSMODEL")
+
 idf <- ida.data.frame('IRIS')
 
 #Create a view based on the IDA data frame

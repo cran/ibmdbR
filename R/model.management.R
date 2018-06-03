@@ -36,7 +36,7 @@ idaDropModel <- function(modelname) {
   xx <- parseTableName(modelname)
   
   if(idaIsDb2z()) {
-    model <- paste('"',xx$table,'"',sep='')	
+    model <- paste0('"',xx$table,'"')
     tryCatch({	
       res <- callSP('DROP_MODEL', model=model)
       return(res)		
@@ -46,9 +46,18 @@ idaDropModel <- function(modelname) {
     }
     )
   } else {
-    model <- paste('"',xx$schema,'"."',xx$table,'"',sep='') 	
-    idaQuery("CALL IDAX.DROP_MODEL('model=",model,"')")
-  }	
+    model <- paste0('"',xx$schema,'"."',xx$table,'"')
+    tryCatch({
+      idaQuery("CALL IDAX.DROP_MODEL('model=",model,"')")
+    }, error = function(e) {
+      if (grepl("CDFAA0863E", e))  {
+        # if "model in use" error message try it again
+        idaQuery("CALL IDAX.DROP_MODEL('model=",model,"')")
+      } else {
+        stop(e)
+      }
+    })
+  }
 }
 
 idaGetModelname <- function(object) {
@@ -85,12 +94,12 @@ idaRetrieveModel <- function(modelname) {
                                          modelSchema == models$MODELSCHEMA]		
     #THE NAME OF THE RETRIEVEMODEL FUNCTION HAS TO BE AT THE SAME INDEX AS THE NAME OF THE
     #RESPECTIVE ALGORITHM...									
-    retrievemethods <- c("idaRetrieveKMeansModel", "idaRetrieveRulesModel", "idaRetrieveNBModel",
-                         "idaRetrieveSeqRulesModel", "idaRetrieveidaLmModel", "idaRetrieveTreeModel",
+    retrievemethods <- c("idaRetrieveKMeansModel", "idaRetrieveTwoStepModel", "idaRetrieveRulesModel", "idaRetrieveNBModel",
+                         "idaRetrieveSeqRulesModel", "idaRetrieveidaLmModel", "idaRetrieveGlmModel",  "idaRetrieveTreeModel",
                          "idaRetrieveTreeModel")
     
-    algorithms <- c("Kmeans", "Association Rules", "Naive Bayes", "Sequential Patterns",
-                    "Linear Regression", "Regression Tree", "Decision Tree")
+    algorithms <- c("Kmeans", "TWOSTEP", "Association Rules", "Naive Bayes", "Sequential Patterns",
+                    "Linear Regression", "GLM", "Regression Tree", "Decision Tree")
     
   }									 
   if(length(modelAlgorithm)==0){

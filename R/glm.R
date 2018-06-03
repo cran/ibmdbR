@@ -43,12 +43,13 @@ idaGlm <- function(form,
   if(idaIsDb2z()) {
     encoding <- idaGetAcceleratorEncoding();
     if (encoding != "UNICODE"){
-      stop(paste("For DB2 for z/OS connections only UNICODE data are supported. The encoding of the input data, however is ", encoding, sep=""))
+      stop(paste("For DB2 for z/OS connections only UNICODE data are supported. The encoding of the input data, however is ",
+                  encoding, sep=""))
     }
-  } else {
-    stop("idaGlm is only available for DB2 for z/OS, yet.")
+  } else if (!idaIsRegularTable(data@table) && !is.null(data@where)) {
+    stop(simpleError("Only IDA data frames on regular tables without where-conditions are supported for idaGlm."))
   }
-  
+
   model <- modelname
   if (all(is.null(data), is.null(model))) {
     stop("Plase specify either data or model.")
@@ -119,25 +120,54 @@ idaGlm <- function(form,
     
     dataTmpv = idaCreateView(dataTmp)
     
-    tryCatch({	
-      callSP("GLM ",
-             model=model,
-             intable=dataTmpv,
-             id=id,
-             target=varY,
-             family=family,
-             family_param=family_param,
-             link=link,
-             link_param=link_param,
-             maxit=maxit,
-             eps=eps,
-             tol=tol,
-             method=method,
-             trials=trials,
-             intercept=intercept,
-             incolumn=incolumn,
-             interaction=interaction,
-             ...)
+    tryCatch({
+      if (idaIsDb2z()) {
+        callSP("GLM ",
+                model=model,
+                intable=dataTmpv,
+                id=id,
+                target=varY,
+                family=family,
+                family_param=family_param,
+                link=link,
+                link_param=link_param,
+                maxit=maxit,
+                eps=eps,
+                tol=tol,
+                method=method,
+                trials=trials,
+                intercept=intercept,
+                incolumn=incolumn,
+                interaction=interaction,
+                ...)
+       } else {
+        if (is.null(incolumn)) {
+          # if we use the input table as intable we have to specify the input columns explicitley
+          incolumn <-
+            paste("\"",
+                  paste(dataTmp@cols[ !sapply(dataTmp@cols, FUN=function(x) {paste("\"", x, "\"",sep="")})
+                                      %in%
+                                      c(id,varY) ],
+                        collapse="\";\""),
+                  "\"",
+                  sep="")
+        }
+        callSP("GLM ",
+                model=model,
+                intable=data@table,
+                id=id,
+                target=varY,
+                family=family,
+                link=link,
+                link_param=link_param,
+                maxit=maxit,
+                tol=tol,
+                trials=trials,
+                intercept=intercept,
+                incolumn=incolumn,
+                effect=interaction,
+                ...)
+      }
     }, error = function(e) {
       # in case of error, let user know what happend
       stop(e)
@@ -206,20 +236,21 @@ idaGlm.format.glm <- function(model, call, id, form, data) {
       idaDeleteTable(exportModelTable)
     })
   } else {
-    dictQuery <- paste('SELECT ', dictCols, ' FROM "', modelSchema,'"."',model,'_DICTIONARY"',sep="")
+    dictQuery <- paste('SELECT ', dictCols, ' FROM "', modelSchema,'"."',modelName,'_DICTIONARY"',sep="")
     dict.out <- idaQuery(dictQuery)
     
-    modelQuery <- paste('SELECT ', modelCols, ' FROM "', modelSchema,'"."',model,'_MODEL"',sep="")
+    modelQuery <- paste('SELECT ', modelCols, ' FROM "', modelSchema,'"."',modelName,'_MODEL"',sep="")
     model.out <- idaQuery(modelQuery)
     
-    facdicQuery <- paste('SELECT ', facdicCols, ' FROM "', modelSchema,'"."',model,'_FACDIC"',sep="")
+    facdicQuery <- paste('SELECT ', facdicCols, ' FROM "', modelSchema,'"."',modelName,'_FACDIC"',sep="")
     facdic.out <- idaQuery(facdicQuery)
     
-    ppmatQuery <- paste('SELECT ', ppmatCols, ' FROM "', modelSchema,'"."',model,'_PPMATRIX"',sep="")
+    ppmatQuery <- paste('SELECT ', ppmatCols, ' FROM "', modelSchema,'"."',modelName,'_PPMATRIX"',sep="")
     ppmat.out <- idaQuery(ppmatQuery)
     
-    residsQuery <-  paste('SELECT ', residsCols, ' FROM "', modelSchema,'"."',model,'_RESIDUALS"',sep="")
-    resids.out <-  idaQuery(residsQuery)
+    # residsQuery <-  paste('SELECT ', residsCols, ' FROM "', modelSchema,'"."',modelName,'_RESIDUALS"',sep="")
+    # resids.out <-  idaQuery(residsQuery)
+    resids.out <- NULL
   }
   
   # get coefficients (=beta)
@@ -292,14 +323,14 @@ idaGlm.format.raw <- function(model, raw.resid) {
       facdic.out <- idaQuery(facdicQuery)
       
       ppmatQuery <- paste('SELECT ', ppmatCols, ' FROM ', exportModelTable,' where MODELUSAGE= \'PPMatrix\'',sep="")
-      ppmat.out <-
+      ppmat.out <- idaQuery(ppmatQuery)
         
-        if (raw.resid) {
+      if (raw.resid) {
           residsQuery <- paste('SELECT ', residsCols, ' FROM ', exportModelTable,' where MODELUSAGE= \'Residuals\'',sep="")
           resids.out <-  idaQuery(residsQuery)
-        } else  {
+      } else  {
           resids.out <- NULL
-        }
+      }
     }, error = function(e) {
       # in case of error, let user know what happend
       stop(e)
@@ -307,24 +338,25 @@ idaGlm.format.raw <- function(model, raw.resid) {
       idaDeleteTable(exportModelTable)
     })
   } else {
-    dictQuery <- paste('SELECT ', dictCols, ' FROM "', modelSchema,'"."',model,'_DICTIONARY"',sep="")
+    dictQuery <- paste('SELECT ', dictCols, ' FROM "', modelSchema,'"."',modelName,'_DICTIONARY"',sep="")
     dict.out <- idaQuery(dictQuery)
     
-    modelQuery <- paste('SELECT ', modelCols, ' FROM "', modelSchema,'"."',model,'_MODEL"',sep="")
+    modelQuery <- paste('SELECT ', modelCols, ' FROM "', modelSchema,'"."',modelName,'_MODEL"',sep="")
     model.out <- idaQuery(modelQuery)
     
-    facdicQuery <- paste('SELECT ', facdicCols, ' FROM "', modelSchema,'"."',model,'_FACDIC"',sep="")
+    facdicQuery <- paste('SELECT ', facdicCols, ' FROM "', modelSchema,'"."',modelName,'_FACDIC"',sep="")
     facdic.out <- idaQuery(facdicQuery)
     
-    ppmatQuery <- paste('SELECT ', ppmatCols, ' FROM "', modelSchema,'"."',model,'_PPMATRIX"',sep="")
+    ppmatQuery <- paste('SELECT ', ppmatCols, ' FROM "', modelSchema,'"."',modelName,'_PPMATRIX"',sep="")
     ppmat.out <- idaQuery(ppmatQuery)
     
-    if (raw.resid) {
-      residsQuery <-  paste('SELECT ', residsCols, ' FROM "', modelSchema,'"."',model,'_RESIDUALS"',sep="")
-      resids.out <-  idaQuery(residsQuery)
-    } else  {
-      resids.out <- NULL
-    }
+    # if (raw.resid) {
+    #   residsQuery <-  paste('SELECT ', residsCols, ' FROM "', modelSchema,'"."',modelName,'_RESIDUALS"',sep="")
+    #   resids.out <-  idaQuery(residsQuery)
+    # } else  {
+    #   resids.out <- NULL
+    # }
+    resids.out <- NULL
   }
   
   
@@ -341,6 +373,10 @@ idaRetrieveGlmModel <- function(model)  {
 # -----------------------------------------------------------------------------
 
 predict.idaGlm <- function(object, newdata, id, outtable = NULL, ...) {
+  if (!idaIsDb2z() && !idaIsRegularTable(newdata@table) && !is.null(newdata@where)) {
+    stop(simpleError("Only IDA data frames on regular tables without where-conditions are supported for predict.idaGlm."))
+  }
+
   if (is.null(outtable) || outtable == "") {
     outtable <- idaGetValidTableName(paste("PREDICT_",sep=""))
   }
@@ -353,11 +389,15 @@ predict.idaGlm <- function(object, newdata, id, outtable = NULL, ...) {
   id  <- dQuoteSimple(id)
   
   tmpView <- idaCreateView(newdata)
-  
+  if (idaIsDb2z()) {
+    inTableView <- tmpView
+  } else {
+    inTableView <- newdata@table
+  }
   tryCatch({
     callSP("PREDICT_GLM ",
            model=object$modelname,
-           intable=tmpView,
+           intable=inTableView,
            id=id,
            outtable=outtable, 
            ... )

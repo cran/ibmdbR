@@ -66,15 +66,19 @@ idaConnect <- function (dsn,
 #' @param dsnString 
 #'
 #' @return true, if dsnString is DSN connection String
+
 isDSNString <- function(dsnString) {
-  splittedList <- lapply(strsplit(dsnString, ";"), function(x) { strsplit(x, "=")})
-  sapply(splittedList, function(x) {
-    equalSignOccurences <- sapply(x, length) - 1
+  if (!is.null(dsnString) && nzchar(dsnString)) {
+    dsnStringSplit <-  strsplit(strsplit(dsnString, ";")[[1]], "=")
+    equalSignOccurences <- sapply(dsnStringSplit, length) - 1
     equalSignOccurences.length <- length(equalSignOccurences)
     if (equalSignOccurences.length > 1) {
       all(equalSignOccurences[2:equalSignOccurences.length] > 0)
     } else {
       equalSignOccurences[1] > 0
-    }  
-  })
+    }
+  } else {
+    FALSE
+  }
 }
+

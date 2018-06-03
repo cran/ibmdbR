@@ -1,0 +1,91 @@
+# Tests of the R-functions which depend on the integration of Db2 Warehouse with Spark
+
+library(ibmdbR)
+conx <- idaConnect("BLUDB","","")
+idaInit(conx)
+
+#Add an ID column to iris
+iris2 <- iris
+iris2$ID <- 1:150
+
+irisTableName <- "IRIS_RR_TEST"
+#Upload it and overwrite if already exists
+idf <- as.ida.data.frame(iris2,irisTableName,clear.existing=T)
+
+# test idaTwoStep
+
+# Create a two step model stored in the database as TWOSTEPMODEL
+tsm <- idaTwoStep(idf, id="ID",k=10,modelname="TWOSTEPMODEL")
+
+#Print the model
+print(tsm)
+
+#Predict the model
+pred <- predict(tsm,idf,id="ID")
+
+#Inspect the predictions
+head(pred)
+
+# test idaGlm
+
+# Calculate glm model in-db
+glm <- idaGlm(PetalWidth~., idf, id="ID", family="gaussian", link="identity", modelname="GLMMODEL")
+
+#Print the model
+print(glm)
+
+#Apply the model to data
+pred2 <- predict(glm,idf,"ID")
+
+#Inspect the results
+head(pred2)
+
+
+# test idaTApply
+
+irisTableName2 <- "IRIS_TAPPLY_TEST"
+#Upload it and overwrite if already exists
+idf2 <- as.ida.data.frame(iris,irisTableName,clear.existing=T)
+
+
+#Define a function that computes the mean value for every column of a data frame x
+#except the index column.
+#It returns a data frame with the value of the index column and the mean values.
+columnMeans<- function(x, index) {
+  cbind(index=x[1,match(index, names(x))],
+  as.data.frame(as.list(apply(x[,names(x) != index],2,mean))))}
+
+
+#Apply the columnMeans function to the subsets of the iris data identified by the Species column
+resSig <- list(Species="VARCHAR(12)", MSepalLength="DOUBLE", MSepalWidth="DOUBLE",
+                MPetalLength="DOUBLE", MPetalWidth="DOUBLE")
+resDf <- idaTApply(idf2, "Species", FUN=columnMeans, output.name="IRIS_MEANS", output.signature=resSig)
+
+#Inspect the result
+head(resDf)
+
+#It is possible as well to apply an anonymous function.
+#The value "5" of the second parameter designates the position of the "Species" column
+#in the idf2 ida.data.frame.
+#The output table of the previous call is recreated because of the "clear.existing=T" parameter.
+resDf2 <- idaTApply(idf2, 5,
+                        FUN=function(x, index) {
+                            cbind(index=x[1,match(index, names(x))],
+                            as.data.frame(as.list(apply(x[,names(x) != index],2,mean))))},
+                            output.name="IRIS_MEANS", output.signature=resSig, clear.existing=T)
+
+#Inspect the result
+head(resDf2)
+
+# cleanup
+idaDeleteTable(pred)
+idaDeleteTable(pred2)
+idaDeleteTable(resDf2)
+idaDropModel("TWOSTEPMODEL")
+idaDropModel("GLMMODEL")
+
+# drop the IRIS test tables
+idaDeleteTable(irisTableName)
+idaDeleteTable(irisTableName2)
+
+idaClose(conx)
