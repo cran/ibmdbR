@@ -33,7 +33,7 @@ idaTable<-function (idadf,max.entries=1000) {
   for (a in args) {
     
     levels<-idaLevels(idadf,a) 	 #Select Levels of the Column
-    o<-order(levels[1])		 #Order them in Ascending
+    o<-order(levels[,1])		 #Order them in Ascending
     nm<-c(nm,list(levels[o,1]))	 #List of Level Names
     nl <- length(unlist(levels))	 #Number of Levels			 
     dims <- c(dims, nl) 

@@ -210,7 +210,7 @@ setMethod("[", signature(x = "ida.data.frame"),
               if (tryCatch(!is.null(i),error = function(e) {print(e);print("Sub set selection could not be created, the left-hand side of the expression must be a column reference, the right-hand side must be a value or a column reference in the same table.")}) == TRUE) {
                 if (is.numeric(i))
                   stop("row numbering is not allowed")
-                else if (class(i)=="ida.col.def") {
+                else if (is(i, "ida.col.def")) {
                   if((i@table@table != x@table)||(i@table@where!=x@where))
                     stop("Cannot apply condition to columns not in the base table.")
                   
@@ -218,7 +218,7 @@ setMethod("[", signature(x = "ida.data.frame"),
                     stop("Column expression must resolve into a boolean value for row selection.")            
                   newRowSelection <- i@term;
                 } 
-                else if (class(i) == "ida.data.frame.rows") 
+                else if (is(i, "ida.data.frame.rows"))
                   newRowSelection <- i@where
                 else 
                   stop("row object does not specify a subset")

@@ -433,17 +433,17 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
     
     #Print plot into png
     png(filename = "RelImpPlot.png")
-    plot1 <- ggplot(reshaped, aes_string(x = 'Attributes', y = 'Explanation', fill = "time",
+    plot1 <- ggplot2::ggplot(reshaped, ggplot2::aes_string(x = 'Attributes', y = 'Explanation', fill = "time",
                                          width=0.4)) +
-      scale_x_discrete(expand=c(0.1,0))+
-      scale_fill_manual(values=c("#B42600", "#033676", "#E7C500"),
-                        breaks=c("Model_Value","First",  "Usefulness"),
-                        c('Model_Value', 'First', 'Usefulness'))+
-      geom_bar(stat = "identity", position = "identity")+
-      guides(fill = guide_legend(reverse = FALSE, title = NULL))
+      ggplot2::scale_x_discrete(expand=c(0.1,0))+
+      ggplot2::scale_fill_manual( values=c("#B42600", "#033676", "#E7C500"),
+                                  breaks=c("Model_Value","First",  "Usefulness"),
+                                  c('Model_Value', 'First', 'Usefulness'))+
+      ggplot2::geom_bar(stat = "identity", position = "identity")+
+      ggplot2::guides(fill = ggplot2::guide_legend(reverse = FALSE, title = NULL))
     
     if(names == TRUE){
-      plot1 <- plot1 + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+      plot1 <- plot1 + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5))
     }
     
     print(plot1)
@@ -473,12 +473,12 @@ plot.idaLm <- function(x, names = TRUE, max_forw = 50, max_plot = 15, order = NU
     }
     #try({graphics.off()}, silent=TRUE) #too destructive
     png(filename="RelImpPlot.png")
-    plot1 <- ggplot(data, aes_string(x = 'Attributes', y = 'Explanation')) + 
-      geom_bar(stat = "identity", fill="#FF6F00", width=0.4)+
-      scale_x_discrete(expand=c(0.1,0))
+    plot1 <- ggplot2::ggplot(data, ggplot2::aes_string(x = 'Attributes', y = 'Explanation')) +
+      ggplot2::geom_bar(stat = "identity", fill="#FF6F00", width=0.4)+
+      ggplot2::scale_x_discrete(expand=c(0.1,0))
     
     if(names == TRUE){
-      plot1 <- plot1 + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+      plot1 <- plot1 + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust = 0.5))
     }
     print(plot1)
     dev.off()

@@ -79,8 +79,6 @@ names(myPrivateObjects)
 # Return the number of objects in the private R object storage table of the current user.
 length(myPrivateObjects)
 
-#Drop the model with the name MYTREEMODEL
-idaDropModel("KMEANSMODEL");
 #Get a list of all models
 q <- idaListModels();
 #Create a pointer to table IRIS

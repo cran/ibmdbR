@@ -11,6 +11,8 @@
 \usepackage{hyperref}
 
 %\VignetteIndexEntry{Use IBM In-Database Analytics with R}
+%\VignetteEngine{knitr::knitr}
+%\usepackage[UTF-8]{inputenc}
 
 \renewcommand{\headrulewidth}{0pt}
 \pagestyle{fancy}
@@ -30,7 +32,14 @@
 \makeatother
 
 \begin{document}
-\SweaveOpts{concordance=TRUE}
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+concordance=TRUE
+)
+@
+
 
 \title{Use IBM In-Database Analytics with R}
 \author{M. Wurst, C. Blaha, A. Eckert, IBM Germany Research and Development}

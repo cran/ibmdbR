@@ -72,7 +72,7 @@ setIdaAggFunct("sd","STDDEV")
 setIdaAggFunct("length","COUNT")
 
 format.ida.col.def <- function(x, format, ...){
-  if(class(x)!="ida.col.def"){
+  if(!is(x, "ida.col.def")){
     stop("x has to be an ida.col.def object")
   }
   

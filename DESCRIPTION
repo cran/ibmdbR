@@ -1,32 +1,40 @@
 Package: ibmdbR
-Version: 1.50.0
+Version: 1.51.0
 Title: IBM in-Database Analytics for R
-Author: Toni Bollinger [aut, cre],
-  Alexander Eckert [aut],
-  Michael Wurst [aut],
-  Craig Blaha [ctb] (documentation),
-  IBM Corporation [cph]
 Authors@R: c(
-    person("Toni", "Bollinger", role = c("aut", "cre"), email = "db2-analytics@de.ibm.com"),
+    person("Shaikh", "Quader", role = c("aut", "cre"), email = "db2-analytics@de.ibm.com"),
+    person("Toni", "Bollinger", role = c("aut")),
+    person("Ming-pang", "Wei", role = c("aut")),
     person("Alexander", "Eckert", role = c("aut")),
     person("Michael", "Wurst", role = c("aut")),
     person("Craig", "Blaha", role = c("ctb"), comment = "documentation"),
-    person("IBM Corporation", role = c("cph"), email = "inza@de.ibm.com")
+    person("IBM Corporation", role = c("cph"), email = "db2-analytics@de.ibm.com")
     )
-Maintainer: Toni Bollinger <db2-analytics@de.ibm.com>
 Depends: R (>= 2.15.1), methods, RODBC, Matrix, arules
-Imports: MASS, rpart, rpart.plot, ggplot2
-Suggests: SparkR
+Imports: MASS, rpart, rpart.plot
+Suggests: ggplot2, knitr, SparkR
+VignetteBuilder: knitr
 Description: 
-        Functionality required to efficiently use R with IBM(R) Db2(R) 
-        Warehouse offerings (formerly IBM dashDB(R)) and IBM Db2 for z/OS(R) in 
-        conjunction with IBM Db2 Analytics Accelerator for z/OS. 
+        Functionality required to efficiently use R with IBM(R) Db2(R)
+        Warehouse offerings (formerly IBM dashDB(R)) and IBM Db2 for z/OS(R) in
+        conjunction with IBM Db2 Analytics Accelerator for z/OS.
         Many basic and complex R operations are pushed down into the database, 
         which removes the main memory boundary of R and allows to make full 
         use of parallel processing in the underlying database.
+        For executing R-functions in a multi-node environment in parallel the idaTApply() function
+        requires the 'SparkR' package (<https://spark.apache.org/docs/latest/sparkr.html>).
+        The optional 'ggplot2' package is needed for the plot.idaLm() function only.
 License: GPL-3
 LazyLoad: Yes
 NeedsCompilation: no
 Repository: CRAN
-Packaged: 2018-05-14 08:35:39 UTC; toni
-Date/Publication: 2018-06-03 15:17:31 UTC
+Packaged: 2023-11-23 22:17:18 UTC; mingpang
+Author: Shaikh Quader [aut, cre],
+  Toni Bollinger [aut],
+  Ming-pang Wei [aut],
+  Alexander Eckert [aut],
+  Michael Wurst [aut],
+  Craig Blaha [ctb] (documentation),
+  IBM Corporation [cph]
+Maintainer: Shaikh Quader <db2-analytics@de.ibm.com>
+Date/Publication: 2023-11-24 09:10:02 UTC
